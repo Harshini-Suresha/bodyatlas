@@ -1,8 +1,12 @@
-# BodyTrack Atlas
+# BodyTrack Atlas — cross-species anatomy index
 
-Interactive body atlas — click a body part to see which datasets apply and track findings over time.
+Pick an organism, then an anatomical region, to get the right open imaging datasets — with in-browser analysis and longitudinal tracking.
 
 Live site: `https://harshini-suresha.github.io/bodyatlas/`
+
+## Organisms (7)
+
+Human · Mouse · Rat · Macaque · Zebrafish · Fruit fly · C. elegans — each with species-specific regions, verified sources, mirrors, pipelines and a built-in image/CSV analyser. Human keeps the full body figure, 3D models and lesion-timeline demo.
 
 ## Run locally
 
