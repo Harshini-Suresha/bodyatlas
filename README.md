@@ -4,9 +4,9 @@ Pick an organism, then an anatomical region, to get the right open imaging datas
 
 Live site: `https://harshini-suresha.github.io/bodyatlas/`
 
-## Organisms (7)
+## Organisms (9)
 
-Human · Mouse · Rat · Macaque · Zebrafish · Fruit fly · C. elegans — each with species-specific regions, verified sources, mirrors, pipelines and a built-in image/CSV analyser. Human keeps the full body figure, 3D models and lesion-timeline demo.
+Human · Mouse · Rat · Macaque · Marmoset · Pig · Zebrafish · Fruit fly · C. elegans — each with species-specific regions, verified sources, mirrors, pipelines and a built-in image/CSV analyser. Human keeps the full body figure, 3D models and lesion-timeline demo; other species get embedded microCT/CT Sketchfab models where free scientific ones exist, plus authoritative viewers and free STL/model links.
 
 ## Run locally
 
