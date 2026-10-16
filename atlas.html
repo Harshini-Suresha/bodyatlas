@@ -103,7 +103,7 @@ summary:hover{color:var(--a-dark)}.hh{margin:4px 0 -2px;font-size:11px;letter-sp
  <aside class="side">
    <div class="card"><div style="font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:6px">Region profile · methods &amp; cohorts</div><h2 id="rn"></h2><p id="rd"></p></div>
   <div class="card" id="mc"><h3>3D model</h3><select id="mSel" aria-label="3D model"><option value="auto">Auto: follows the body part you pick</option><option value="mus">Muscles</option><option value="skel">Skeleton</option><option value="brain">Brain</option><option value="head">Head</option><option value="chest">Chest ribcage</option><option value="lungs">Lungs</option><option value="heart">Heart</option><option value="abdomen">Abdomen and digestive system</option><option value="liver">Liver</option><option value="stomach">Pancreas and spleen</option><option value="kidneys">Kidney</option><option value="intestines">Intestines</option><option value="spine">Spine</option><option value="joints">Knee joint</option><option value="pelvis">Pelvis</option><option value="arms">Arm</option><option value="legs">Leg bones</option></select>
-   <div class="f"><input type="text" id="mU" placeholder="Or paste any Sketchfab model link" aria-label="Sketchfab model link"><button id="mB">Use this model</button></div><p class="note" id="mT"></p></div>
+   <div class="f"><input type="text" id="mU" placeholder="Or paste any Sketchfab model link" aria-label="Sketchfab model link"><button id="mB">Use this model</button></div><p class="note" id="mT"></p><div id="orgView"></div></div>
   <div class="card"><h3>Tracked hotspots here</h3><div id="hs" style="display:flex;flex-direction:column;gap:8px"></div></div>
   <div class="card"><h3>Alerts for this scan</h3><div id="al"></div></div>
    <h3 class="hh">Datasets for this body part</h3>
@@ -342,7 +342,7 @@ function openWb(gi){
 function histOf(v){const b=new Array(64).fill(0),mn=Math.min(...v),mx=Math.max(...v);v.forEach(x=>{const i=Math.max(0,Math.min(63,Math.floor((x-mn)/((mx-mn)||1)*63)));b[i]++});return b}
 function drawHist(bins){const c=$('histCanvas');if(!c)return;const g=c.getContext('2d'),mx=Math.max(...bins,1);g.clearRect(0,0,c.width,c.height);g.fillStyle='#0e7c7b';bins.forEach((b,i)=>{const h=b/mx*(c.height-14);g.fillRect(i*(c.width/64),c.height-h,c.width/64-1,h)})}
 function select(k){sel=REG[k]?k:'all';if(!orgRegions().includes(sel))sel=orgRegions()[0];$('aR').value=sel==='all'?'all':sel;paint();chips();list();hot();autoView();show3();orgMsg()}
-function selectOrg(o){curOrg=ORGANISMS[o]?o:'human';sel=orgRegions()[0];paint();chips();list();hot();autoView();show3();orgMsg()}
+function selectOrg(o){curOrg=ORGANISMS[o]?o:'human';sel=orgRegions()[0];buildMdl();showViewers();paint();chips();list();hot();autoView();show3();orgMsg()}
 function orgMsg(){const m=$('orgMsg');if(!m)return;const org=ORGANISMS[curOrg];if(curOrg==='human'){m.style.display='none';return}m.style.display='block';m.innerHTML='<b>'+esc(org.n)+' ('+esc(org.sci)+')</b> · '+esc(org.d)+' Pick a region above — datasets, mirrors and pipelines are species-specific. Human body drawing is hidden for non-human species; use the 3D model menu for anatomy.'}
 $('q').oninput=list;
 $('wbClose').onclick=()=>$('wbWrap').classList.remove('open');
@@ -384,20 +384,27 @@ $('bTint').onclick=e=>{tintOn=!tintOn;e.target.setAttribute('aria-pressed',tintO
 /* ---------- 3D viewer (Sketchfab embed) ---------- */
 const MD={mus:['ab11ebff89224f03bd75efede1164cf6','Male Full Body Ecorche (muscles)'],skel:['4de7b96a351a4a35b1b6e5415277ff07','Skeleton by Diego Luj\u00e1n Garc\u00eda'],
  brain:['02463f38cad94a81846bb8de9b1cb9b1','Brain'],lungs:['b405d532359a4efe8fba1185c777860d','Full lung'],heart:['3b50017ba1ff4403b385fb72c6a8378b','Human heart'],stomach:['5ea30b7d1fd748a3ae989efbb3b65936','Duodenum, pancreas, spleen'],intestines:['6f96e9b0ca5e4c28a8c7a6d27ec95a16','Large and small intestines'],head:['59e3fc50a3b54e78a1719472b43216c3','Head anatomy'],
- liver:['6c4e9bd0d49f4828b804259330c0c6c4','Human liver and gallbladder'],kidneys:['e1476ceb1e3b4412af5418eee9c5ed08','Human kidney'],spine:['bcd9eee09ce044ef98a69c315aa792e2','The human spinal column'],joints:['bd50aacad58b488ea80ed973b4874a08','Knee anatomy'],arms:['766b8b8d086a495793e28bcdbc5a5aa1','Human arm'],legs:['8b610c5ee6424015b8300b6aa303f902','Leg bones'],pelvis:['6e04b899c5204a4eae1d20c4ec5c4ef7','Human male and female pelvis'],chest:['9b24894e318d4f37b7a10692d77b8343','Ribcage and pelvis'],abdomen:['bfe2c671298947f8bcf0f69c06e74ed8','Adult digestive system']};
+  liver:['6c4e9bd0d49f4828b804259330c0c6c4','Human liver and gallbladder'],kidneys:['e1476ceb1e3b4412af5418eee9c5ed08','Human kidney'],spine:['bcd9eee09ce044ef98a69c315aa792e2','The human spinal column'],joints:['bd50aacad58b488ea80ed973b4874a08','Knee anatomy'],arms:['766b8b8d086a495793e28bcdbc5a5aa1','Human arm'],legs:['8b610c5ee6424015b8300b6aa303f902','Leg bones'],pelvis:['6e04b899c5204a4eae1d20c4ec5c4ef7','Human male and female pelvis'],chest:['9b24894e318d4f37b7a10692d77b8343','Ribcage and pelvis'],abdomen:['bfe2c671298947f8bcf0f69c06e74ed8','Adult digestive system'],
+  zfBone:['357e772443d444d091723a9ceecf2b1c','Zebrafish skeleton, microCT (NIG 3D Imaging Room)'],zfWhole:['b0984470c8564e5a955989d9e0b1bad5','Zebrafish whole-body bone, microCT (NIG 3D Imaging Room)'],musEmbBrain:['a53232ad5fcf454dbf903d6515613a18','Mouse embryo E14.5 brain, microCT (NIG 3D Imaging Room)'],musEmbOrg:['bafb5252816243fca798805e665918a5','Mouse embryo E14.5 internal organs, microCT (NIG 3D Imaging Room)'],musDev:['923cd4b2cf3f4cf196c673938660852c','Mouse embryo development E10.5–18.5 (NIG 3D Imaging Room)'],flyBrain:['7f2356f468d14248ad55da725d472f81','Fruit fly brain from fluorescence stack (BMBK, CC-BY)'],flyCT:['ad29b897bd2b4e27bb04ab9d31baa117','Drosophila adult, CT scan']};
 const AUTO={};Object.keys(MD).forEach(k=>{if(REG[k]&&k!=='all')AUTO[k]=k});
+const ORG3D={human:null,mouse:['musEmbBrain','musEmbOrg','musDev'],rat:[],macaque:[],zebrafish:['zfBone','zfWhole'],fly:['flyBrain','flyCT'],worm:[]};
+const ORGAUTO={mouse:{brain:'musEmbBrain',embryo:'musDev',heart:'musEmbOrg',lungs:'musEmbOrg',liver:'musEmbOrg',kidneys:'musEmbOrg',intestines:'musEmbOrg',joints:'musEmbBrain'},zebrafish:{brain:'zfWhole',spine:'zfBone',embryo:'zfWhole',heart:'zfWhole'},fly:{brain:'flyBrain',embryo:'flyCT',heart:'flyCT',intestines:'flyCT'}};
+const ORGVIEW={mouse:[['Allen Brain 3D','https://mouse.brain-map.org/'],['eMouseAtlas','https://www.emouseatlas.org/']],rat:[['EBRAINS rat viewer','https://ebrains.eu/data-tools-services/brain-atlases/rat-brain']],macaque:[['PRIME-RE resources','https://prime-re.github.io/']],zebrafish:[['mapZebrain','https://mapzebrain.org/'],['ZFIN','https://zfin.org/']],fly:[['Virtual Fly Brain','https://virtualflybrain.org/']],worm:[['WormAtlas','https://www.wormatlas.org/'],['OpenWorm','https://openworm.org/']]};
 let is3d=true,cur='',custom=null;let flipped=false;
 function autoView(){if($('mSel').value!=='auto'||custom)return;const app=document.querySelector('.app');
   if(sel==='all'&&is3d){is3d=false;flipped=true}else if(sel!=='all'&&flipped&&!is3d){is3d=true;flipped=false}else return;
   $('b3d').setAttribute('aria-pressed',is3d);app.classList.toggle('is3d',is3d)}
-function show3(){if(!is3d)return;const v=$('mSel').value,m=custom||(v==='auto'?MD[AUTO[sel]]:MD[v]);
-  if(!m){$('mT').textContent='Pick a body part to see its 3D model.';return}
+function autoKey(){if(curOrg!=='human'&&ORGAUTO[curOrg]&&ORGAUTO[curOrg][sel])return ORGAUTO[curOrg][sel];return AUTO[sel]}
+function buildMdl(){const s=$('mSel');s.innerHTML='';const mk=(v,t)=>{const o=document.createElement('option');o.value=v;o.textContent=t;s.appendChild(o)};mk('auto','Auto: follows the organism + region you pick');const keys=(ORG3D[curOrg]&&ORG3D[curOrg].length?ORG3D[curOrg]:Object.keys(MD));keys.forEach(k=>{if(MD[k])mk(k,(curOrg!=='human'?'★ ':'')+MD[k][1])});if(curOrg!=='human')Object.keys(MD).forEach(k=>{if(!keys.includes(k))mk(k,MD[k][1]+' (human)')});s.value='auto';custom=null}
+function show3(){if(!is3d)return;const v=$('mSel').value,m=custom||(v==='auto'?MD[autoKey()]:MD[v]);
+  if(!m){$('mT').textContent=curOrg==='human'?'Pick a body part to see its 3D model.':'No embedded 3D model for this species + region yet — try the authoritative viewers below, or paste any Sketchfab model link.';return}
   if(m[0]!==cur){cur=m[0];$('v3').src='https://sketchfab.com/models/'+m[0]+'/embed?autostart=1&ui_theme=dark'}
-  $('mT').innerHTML='Showing <a href="https://sketchfab.com/models/'+m[0]+'" target="_blank" rel="noopener noreferrer">'+esc(m[1])+'</a> from Sketchfab. All built-in models are CC Attribution, so credit the author if you reuse them. Models you paste in yourself are your responsibility.'}
+  $('mT').innerHTML='Showing <a href="https://sketchfab.com/models/'+m[0]+'" target="_blank" rel="noopener noreferrer">'+esc(m[1])+'</a> from Sketchfab. Check the model page for its licence and credit the author if you reuse it. Models you paste in yourself are your responsibility.'}
+function showViewers(){const el=$('orgView');if(!el)return;const vs=ORGVIEW[curOrg]||[];el.innerHTML=vs.length?'<div class="note" style="margin-top:8px"><b>Authoritative '+esc(ORGANISMS[curOrg].n)+' viewers</b> (higher fidelity than generic 3D for this species): '+vs.map(v=>'<a href="'+v[1]+'" target="_blank" rel="noopener noreferrer">'+esc(v[0])+'</a>').join(' · ')+'</div>':''}
 $('b3d').onclick=e=>{flipped=false;is3d=!is3d;e.currentTarget.setAttribute('aria-pressed',is3d);document.querySelector('.app').classList.toggle('is3d',is3d);show3()};
 $('mSel').onchange=()=>{custom=null;show3()};
 $('mB').onclick=()=>{const m=$('mU').value.match(/[0-9a-f]{32}/i);if(!m){$('mT').textContent='That link has no Sketchfab model ID. Copy the model page address from your browser.';return}custom=[m[0].toLowerCase(),'Your model'];show3()};
-select('brain');setT(0);
+ buildMdl();showViewers();select('brain');setT(0);
 })();
 </script>
 </body>
