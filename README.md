@@ -2,7 +2,7 @@
 
 Interactive body atlas — click a body part to see which datasets apply and track findings over time.
 
-Live site (after GitHub Pages enable): `https://<your-username>.github.io/bodyatlas/`
+Live site: `https://harshini-suresha.github.io/bodyatlas/`
 
 ## Run locally
 
