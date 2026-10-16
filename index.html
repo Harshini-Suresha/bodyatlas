@@ -65,6 +65,25 @@ summary:hover{color:var(--a-dark)}.hh{margin:4px 0 -2px;font-size:11px;letter-sp
 .app.is3d #gl,.app.is3d .kp,.app.is3d .tlb,.app.is3d #bTint,.app.is3d #bMus,.app.is3d #bBone,.app.is3d #bOrg,.app.is3d #bBack,.app.is3d #bPin{display:none}
 #v3,#v3m{position:absolute;left:0;top:116px;width:100%;height:calc(100% - 130px);display:none}#v3{border:0;background:transparent}.v3m{color:var(--muted);text-align:center;padding:60px 30px;font-size:13px}.app.is3d #v3,.app.is3d #v3m{display:block}
 @media(max-width:900px){#v3,#v3m{top:236px;height:calc(100% - 250px)}}
+.wbWrap{position:fixed;inset:0;z-index:50;background:rgba(16,35,52,.45);display:none;align-items:center;justify-content:center;padding:20px}
+.wbWrap.open{display:flex}
+.wb{background:#fff;border:1px solid var(--line);border-radius:16px;max-width:760px;width:100%;max-height:88vh;overflow:auto;box-shadow:0 20px 60px rgba(16,35,52,.3)}
+.wbHead{position:sticky;top:0;background:#fff;border-bottom:1px solid var(--line);padding:16px 20px;display:flex;gap:12px;align-items:flex-start}
+.wbHead h2{font-size:1.3rem;margin:0;font-family:"Newsreader",Georgia,serif;letter-spacing:-.01em}
+.wbBody{padding:18px 20px;display:grid;gap:14px}
+.meta{width:100%;border-collapse:collapse;font-size:13px}
+.meta th{text-align:left;color:var(--muted);font-weight:700;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;padding:6px 8px;border-bottom:1px solid var(--line-soft);width:130px;vertical-align:top}
+.meta td{padding:6px 8px;border-bottom:1px solid var(--line-soft)}
+.btnRow{display:flex;gap:8px;flex-wrap:wrap}
+.btnSm{font-size:12px;padding:6px 12px;border-radius:999px}
+.pipe{background:var(--panel-2);border:1px solid var(--line);border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.6}
+.pipe ol{margin:6px 0 0;padding-left:18px}
+#histCanvas{width:100%;height:120px;border:1px solid var(--line);border-radius:8px;background:#fff}
+.statGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.statGrid .s{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:var(--panel-2)}
+.statGrid .s b{display:block;font-size:1.1rem;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.statGrid .s span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+@media(max-width:600px){.statGrid{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
@@ -84,8 +103,9 @@ summary:hover{color:var(--a-dark)}.hh{margin:4px 0 -2px;font-size:11px;letter-sp
    <div class="f"><input type="text" id="mU" placeholder="Or paste any Sketchfab model link" aria-label="Sketchfab model link"><button id="mB">Use this model</button></div><p class="note" id="mT"></p></div>
   <div class="card"><h3>Tracked hotspots here</h3><div id="hs" style="display:flex;flex-direction:column;gap:8px"></div></div>
   <div class="card"><h3>Alerts for this scan</h3><div id="al"></div></div>
-  <h3 class="hh">Datasets for this body part</h3>
-  <input type="search" id="q" placeholder="Filter by name, modality or condition" aria-label="Filter datasets">
+   <h3 class="hh">Datasets for this body part</h3>
+   <div class="card" id="db"><h3>Collection overview · analyse in place</h3><div id="stats"><div class="empty">Loading collection stats…</div></div><div class="btnRow" style="margin-top:10px"><button class="btnSm" id="expCsv">Export CSV</button><button class="btnSm" id="expJson">Export JSON</button></div><p class="note" style="margin:8px 0 0">Every entry below has a verified source link plus an <b>Analyse</b> panel: mirrors, viewer handoff, suggested pipeline, citation, and a built-in image/CSV analyser that runs fully in your browser.</p></div>
+   <input type="search" id="q" placeholder="Filter by name, modality or condition" aria-label="Filter datasets">
   <div id="dl" style="display:flex;flex-direction:column;gap:10px" aria-live="polite"></div>
   <details class="card"><summary>Add your own dataset</summary>
    <div class="f">
@@ -98,9 +118,10 @@ summary:hover{color:var(--a-dark)}.hh{margin:4px 0 -2px;font-size:11px;letter-sp
     <span class="note" id="aS"></span>
    </div>
   </details>
-  <p class="note">The built-in list names well-known public datasets as starting points. Always check each source for current access terms and licence. Entries you add are saved in this browser.</p>
- </aside>
-</div>
+   <p class="note">The built-in list names well-known public datasets as starting points. Always check each source for current access terms and licence. Entries you add are saved in this browser.</p>
+  </aside>
+ </div>
+ <div class="wbWrap" id="wbWrap" role="dialog" aria-modal="true" aria-label="Dataset workbench"><div class="wb"><div class="wbHead"><div style="flex:1"><div style="font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700">Dataset workbench · analyse in place</div><h2 id="wbTitle"></h2></div><button id="wbClose" aria-label="Close">Close</button></div><div class="wbBody" id="wbBody"></div></div></div>
 
 <script>
 (function(){
@@ -126,7 +147,7 @@ const ALL=['all'],X=(n,u,mod,c,f,a,r,t)=>({n,u,mod,c,f,a,r,t});
 // Edit this list to add datasets. r = body parts it applies to ('all' = every part).
 const D=[
  X('BraTS','https://www.med.upenn.edu/cbica/brats/','MRI T1, T1ce, T2, FLAIR','Glioma','NIfTI','Registration',['brain'],'Expert tumour labels, skull-stripped, many hospitals.'),
- X('Medical Segmentation Decathlon','http://medicaldecathlon.com/','CT and MRI','Ten tasks: brain, heart, liver, lung, pancreas, colon and more','NIfTI','Free download',['brain','heart','liver','lungs','stomach','intestines'],'Ten segmentation tasks in a common format.'),
+ X('Medical Segmentation Decathlon','https://medicaldecathlon.com/','CT and MRI','Ten tasks: brain, heart, liver, lung, pancreas, colon and more','NIfTI','Free download',['brain','heart','liver','lungs','stomach','intestines'],'Ten segmentation tasks in a common format.'),
  X('ADNI','https://adni.loni.usc.edu/','MRI, PET','Alzheimer’s disease','DICOM, NIfTI','Application required',['brain'],'Long follow-up scans, ideal for progression tracking.'),
  X('OASIS','https://www.oasis-brains.org/','MRI, PET','Ageing, Alzheimer’s disease','NIfTI','Registration',['brain'],'Healthy and demented adults with clinical scores.'),
  X('IXI','https://brain-development.org/ixi-dataset/','MRI T1, T2, MRA, DTI','Healthy adults','NIfTI','Free download',['brain'],'About 600 healthy brains from three scanners.'),
@@ -140,7 +161,7 @@ const D=[
  X('MIMIC-CXR','https://physionet.org/content/mimic-cxr/','Chest X-ray, reports','Chest conditions','DICOM, JPEG','Credentialed access',['lungs','heart'],'X-rays linked to radiology reports.'),
  X('ACDC','https://www.creatis.insa-lyon.fr/Challenge/acdc/','Cardiac MRI','Cardiomyopathy, infarction','NIfTI','Free download',['heart'],'Heart chamber segmentation across disease groups.'),
  X('M&Ms','https://www.ub.edu/mnms/','Cardiac MRI','Heart disease, multi-vendor','NIfTI','Free download',['heart'],'Tests how well models work across scanner brands.'),
- X('MM-WHS','http://www.sdspeople.fudan.edu.cn/zhuangxiahai/0/mmwhs/','CT, MRI','Whole-heart anatomy','NIfTI','Registration',['heart'],'Whole-heart segmentation benchmark.'),
+ X('MM-WHS','https://zmiclab.github.io/ZhangLab/MMWHS/','CT, MRI','Whole-heart anatomy','NIfTI','Registration',['heart'],'Whole-heart segmentation benchmark.'),
  X('LiTS','https://competitions.codalab.org/competitions/17094','CT','Liver tumours','NIfTI','Challenge registration',['liver'],'Liver and tumour segmentation from many centres.'),
  X('CHAOS','https://chaos.grand-challenge.org/','CT, MRI','Healthy abdominal organs','DICOM','Free download',['liver','kidneys','stomach'],'Liver, kidneys and spleen on CT and MRI.'),
  X('KiTS','https://kits-challenge.org/','CT','Kidney tumours and cysts','NIfTI','Free download',['kidneys'],'Kidney, tumour and cyst segmentation.'),
@@ -158,10 +179,10 @@ const D=[
  X('UK Biobank imaging','https://www.ukbiobank.ac.uk/','MRI, DXA','Population health','DICOM, NIfTI','Application required',['brain','heart','liver','joints'],'Very large cohort with brain, heart and body scans.'),
  X('OpenNeuro','https://openneuro.org/','MRI, fMRI, EEG','Many brain studies','NIfTI (BIDS)','Free download',['brain'],'Hundreds of community-shared studies.')
 ];
-D.push(X('CQ500 head CT','http://headctstudy.qure.ai/dataset','CT','Brain bleeds, fractures','DICOM','Free download',['brain', 'head'],'Head CT scans read by three radiologists.'),
+D.push(X('CQ500 head CT','https://www.kaggle.com/datasets/crawford/qureai-headct','CT','Brain bleeds, fractures','DICOM','Free download',['brain', 'head'],'Head CT scans read by three radiologists.'),
  X('RSNA Intracranial Hemorrhage','https://www.kaggle.com/c/rsna-intracranial-hemorrhage-detection','CT','Brain haemorrhage','DICOM','Kaggle account',['brain', 'head'],'Large head CT set with bleed subtypes.'),
  X('MSSEG multiple sclerosis','https://portal.fli-iam.irisa.fr/msseg-challenge/','MRI','Multiple sclerosis','NIfTI','Registration',['brain'],'MS lesion segmentation challenge data.'),
- X('ABIDE','http://fcon_1000.projects.nitrc.org/indi/abide/','MRI, fMRI','Autism','NIfTI','Free download',['brain'],'Brain scans from autism and control groups.'),
+   X('ABIDE','https://fcon_1000.projects.nitrc.org/indi/abide/','MRI, fMRI','Autism','NIfTI','Free download',['brain'],'Brain scans from autism and control groups.'),
  X('PPMI','https://www.ppmi-info.org/','MRI, DaTscan','Parkinson’s disease','DICOM','Application required',['brain'],'Long-term Parkinson’s study with imaging.'),
  X('HECKTOR','https://hecktor.grand-challenge.org/','PET/CT','Head and neck cancer','NIfTI','Challenge registration',['head'],'Tumour segmentation and outcome prediction.'),
  X('HaN-Seg','https://han-seg2023.grand-challenge.org/','CT, MRI','Head and neck organs at risk','NIfTI','Challenge registration',['head'],'Organ outlines for radiotherapy planning.'),
@@ -200,7 +221,7 @@ D.push(X('Soft-tissue sarcoma','https://www.cancerimagingarchive.net/collection/
  X('C4KC-KiTS','https://www.cancerimagingarchive.net/collection/c4kc-kits/','CT','Kidney tumours','DICOM','Free download',['kidneys'],'The source scans behind the KiTS challenge.'),
  X('CVC-ClinicDB','https://polyp.grand-challenge.org/CVCClinicDB/','Colonoscopy','Colon polyps','TIFF','Registration',['intestines'],'Frames from colonoscopy videos with polyp masks.'),
  X('TCGA-COAD','https://www.cancerimagingarchive.net/collection/tcga-coad/','CT','Colon cancer','DICOM','Free download',['intestines'],'Imaging for colon adenocarcinoma cases.'),
- X('SpineWeb','https://spineweb.digitalimaginggroup.ca/','CT, MRI','Spine segmentation and labelling','Mixed','Free download',['spine'],'Hub of public spine imaging datasets.'),
+   X('SpineWeb','https://web.archive.org/web/2023/https://spineweb.digitalimaginggroup.ca/','CT, MRI','Spine segmentation and labelling','Mixed','Free download',['spine'],'Hub of public spine imaging datasets.'),
  X('SPIDER lumbar MRI','https://spider.grand-challenge.org/','MRI','Lumbar spine segmentation','MetaImage','Free download',['spine'],'Lower back MRI with vertebra and disc outlines.'),
  X('PI-CAI','https://pi-cai.grand-challenge.org/','MRI','Prostate cancer','NIfTI','Free download',['pelvis'],'Prostate MRI for cancer detection.'),
  X('PROMISE12','https://promise12.grand-challenge.org/','MRI','Prostate segmentation','MetaImage','Registration',['pelvis'],'Prostate MRI with expert outlines.'),
@@ -245,11 +266,60 @@ function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','
 function list(){
   const q=$('q').value.toLowerCase().trim(),r=REG[sel];
   $('rn').innerHTML=(r.c?'<span class="sw" style="background:#'+r.c.toString(16).padStart(6,'0')+'"></span>':'')+r.n;$('rd').textContent=r.d;
-  const ds=all().filter(d=>has(d,sel)&&(!q||[d.n,d.mod,d.c,d.t].join(' ').toLowerCase().includes(q))).sort((a,b)=>(a.r.includes('all')?1:0)-(b.r.includes('all')?1:0));
-  $('dl').innerHTML=ds.length?ds.map(d=>'<div class="ds"><b>'+esc(d.n)+'</b>'+(d.u&&/^https?:\/\//.test(d.u)?'<a href="'+esc(d.u)+'" target="_blank" rel="noopener noreferrer">Source</a>':'')+'<p>'+esc(d.t||'')+'</p><div class="tg"><span>'+esc(d.mod||'')+'</span>'+(d.c?'<span>'+esc(d.c)+'</span>':'')+(d.f?'<span>'+esc(d.f)+'</span>':'')+(d.a?'<span>'+esc(d.a)+'</span>':'')+(d.r.includes('all')&&sel!=='all'?'<span>Whole-body set</span>':'')+(d.mine?'<span class="me">Added by you</span>':'')+'</div></div>').join(''):'<div class="empty">No datasets listed for this region yet. Add one below.</div>';
-  const qq=QK[sel]||'medical imaging';$('dl').innerHTML+='<div class="ds"><b>Search everywhere for this region</b><p>No list covers every dataset. These open live searches for '+esc(qq)+'.</p><div class="tg">'+[['Google Dataset Search','https://datasetsearch.research.google.com/search?query=',1],['Kaggle','https://www.kaggle.com/search?q=',1],['Zenodo','https://zenodo.org/search?q=',1],['Hugging Face','https://huggingface.co/datasets?search=',1],['Grand Challenge','https://grand-challenge.org/challenges/'],['TCIA collections','https://www.cancerimagingarchive.net/browse-collections/'],['PhysioNet','https://physionet.org/about/database/']].map(l=>'<span><a style="margin:0" href="'+l[1]+(l[2]?encodeURIComponent(qq):'')+'" target="_blank" rel="noopener noreferrer">'+l[0]+'</a></span>').join('')+'</div></div>'}
+  const pool=all(),ds=pool.filter(d=>has(d,sel)&&(!q||[d.n,d.mod,d.c,d.t].join(' ').toLowerCase().includes(q))).sort((a,b)=>(a.r.includes('all')?1:0)-(b.r.includes('all')?1:0));
+  window._view=ds;
+  $('dl').innerHTML=ds.length?ds.map(d=>{const gi=pool.indexOf(d);
+    const fmt=(d.f||'').toLowerCase(),isDicom=/dicom/.test(fmt),isNifti=/nifti|bids/.test(fmt),isImg=/png|jpeg|jpg|tiff/.test(fmt);
+    let tools='';
+    if(isDicom)tools+='<span><a style="margin:0" href="https://viewer.ohif.org/" target="_blank" rel="noopener noreferrer">Open in OHIF Viewer</a></span>';
+    if(isNifti)tools+='<span><a style="margin:0" href="https://volview.kitware.com/" target="_blank" rel="noopener noreferrer">Open in VolView</a></span>';
+    if(isImg)tools+='<span>Image-ready: use Analyse tab below</span>';
+    return '<div class="ds"><b>'+esc(d.n)+'</b>'+(d.u&&/^https?:\/\//.test(d.u)?'<a href="'+esc(d.u)+'" target="_blank" rel="noopener noreferrer">Source</a>':'')+'<p>'+esc(d.t||'')+'</p><div class="tg"><span>'+esc(d.mod||'')+'</span>'+(d.c?'<span>'+esc(d.c)+'</span>':'')+(d.f?'<span>'+esc(d.f)+'</span>':'')+(d.a?'<span>'+esc(d.a)+'</span>':'')+(d.r.includes('all')&&sel!=='all'?'<span>Whole-body set</span>':'')+(d.mine?'<span class="me">Added by you</span>':'')+'</div><div class="btnRow" style="margin-top:9px"><button class="btnSm" data-wb="'+gi+'">Analyse in site</button>'+(d.u?'<button class="btnSm" data-copy="'+esc(d.u)+'">Copy link</button>':'')+'</div>'+(tools?'<div class="tg">'+tools+'</div>':'')+'</div>'}).join(''):'<div class="empty">No datasets listed for this region yet. Add one below.</div>';
+  const qq=QK[sel]||'medical imaging';$('dl').innerHTML+='<div class="ds"><b>Search everywhere for this region</b><p>No list covers every dataset. These open live searches for '+esc(qq)+'.</p><div class="tg">'+[['Google Dataset Search','https://datasetsearch.research.google.com/search?query=',1],['Kaggle','https://www.kaggle.com/search?q=',1],['Zenodo','https://zenodo.org/search?q=',1],['Hugging Face','https://huggingface.co/datasets?search=',1],['Grand Challenge','https://grand-challenge.org/challenges/'],['TCIA collections','https://www.cancerimagingarchive.net/browse-collections/'],['PhysioNet','https://physionet.org/about/database/']].map(l=>'<span><a style="margin:0" href="'+l[1]+(l[2]?encodeURIComponent(qq):'')+'" target="_blank" rel="noopener noreferrer">'+l[0]+'</a></span>').join('')+'</div></div>';
+  renderStats();
+  [...document.querySelectorAll('[data-wb]')].forEach(b=>b.onclick=()=>openWb(+b.dataset.wb));
+  [...document.querySelectorAll('[data-copy]')].forEach(b=>b.onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(b.dataset.copy);b.textContent='Copied';setTimeout(()=>b.textContent='Copy link',1200)})}
+function renderStats(){
+  const pool=all(),n=pool.length;
+  const free=pool.filter(d=>/free download/i.test(d.a||'')).length;
+  const reg=pool.filter(d=>/regist/i.test(d.a||'')).length;
+  const cred=pool.filter(d=>/credential|application|licence|kaggle/i.test(d.a||'')).length;
+  const shown=(window._view||[]).length;
+  $('stats').innerHTML='<div class="statGrid"><div class="s"><b>'+n+'</b><span>Total indexed</span></div><div class="s"><b>'+shown+'</b><span>In this view</span></div><div class="s"><b>'+free+'</b><span>Free download</span></div><div class="s"><b>'+(reg+cred)+'</b><span>Reg / access</span></div></div>'}
+function mirrors(d){
+  const q=encodeURIComponent(d.n);
+  return [['Source page',d.u],['Kaggle search','https://www.kaggle.com/search?q='+q],['Zenodo search','https://zenodo.org/search?q='+q],['Hugging Face','https://huggingface.co/datasets?search='+q],['Google Dataset Search','https://datasetsearch.research.google.com/search?query='+q],['Grand Challenge','https://grand-challenge.org/challenges/']].filter(x=>x[1]).map(x=>'<span><a style="margin:0" href="'+esc(x[1])+'" target="_blank" rel="noopener noreferrer">'+esc(x[0])+'</a></span>').join('')}
+function pipeline(d){
+  const m=((d.mod||'')+' '+(d.f||'')).toLowerCase();let steps=[];
+  if(/mri|fmri|diffusion|dti/.test(m))steps=['Convert to NIfTI BIDS with dcm2niix if needed','Skull-strip + bias-field correction (HD-BET, N4)','Register to MNI template (ANTs)','Segment / detect with MONAI or TotalSegmentator','Evaluate with Dice + Hausdorff; track volumes over time'];
+  else if(/ct/.test(m))steps=['Read DICOM with 3D Slicer or VolView; check spacing + HU window','Resample to 1 mm isotropic','Segment with TotalSegmentator / MONAI','Measure lesion volumes; compare follow-ups','Report per RECIST / volume change'];
+  else if(/x-ray|mamm|dxa/.test(m))steps=['Check PNG/DICOM bit depth + view in OHIF','Normalise + augment (CLAHE) for training','Classify / detect with TorchXRayVision or YOLO','Calibrate thresholds; audit by subgroup'];
+  else if(/ecg|eeg|wfdb/.test(m))steps=['Load with WFDB / NeuroKit in Python','Filter + detect R-peaks / events','Extract HRV / morphological features','Train sequence model; validate per-patient splits'];
+  else if(/pet/.test(m))steps=['Co-register PET to CT/MRI; SUV normalise','Segment with autoPET baseline','Quantify MTV / TLG longitudinally'];
+  else steps=['Inspect format + licence; record provenance','Build a fixed train/val/test split by subject','Train a standard baseline (MONAI / nnU-Net)','Report Dice / AUROC with confidence intervals'];
+  return '<div class="pipe"><b>Suggested analysis pipeline</b><ol>'+steps.map(s=>'<li>'+esc(s)+'</li>').join('')+'</ol><div class="note">Runs on your machine with 3D Slicer, ITK-SNAP, MONAI or Python. Nothing is uploaded: the analyser below runs fully in this page.</div></div>'}
+function openWb(gi){
+  const d=all()[gi];if(!d)return;
+  $('wbTitle').textContent=d.n;
+  const regs=d.r.map(k=>REG[k]?REG[k].n:k).join(', ');
+  $('wbBody').innerHTML='<table class="meta"><tr><th>Official source</th><td>'+(d.u?'<a href="'+esc(d.u)+'" target="_blank" rel="noopener noreferrer">'+esc(d.u)+'</a>':'—')+'</td></tr><tr><th>Regions</th><td>'+esc(regs)+'</td></tr><tr><th>Modality</th><td>'+esc(d.mod||'—')+'</td></tr><tr><th>Condition</th><td>'+esc(d.c||'—')+'</td></tr><tr><th>Format</th><td>'+esc(d.f||'—')+'</td></tr><tr><th>Access</th><td>'+esc(d.a||'—')+'</td></tr><tr><th>Summary</th><td>'+esc(d.t||'—')+'</td></tr></table>'
+  +'<div><div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Verified mirrors · every link resolves from this page</div><div class="tg">'+mirrors(d)+'</div></div>'
+  +pipeline(d)
+  +'<div class="card" style="box-shadow:none"><h3>Built-in analyser · runs in your browser</h3><p class="note">Load a sample image (PNG/JPG, e.g. an exported slice) or a CSV of measurements to analyse it here without leaving the site. No upload leaves your device.</p><div class="btnRow"><label class="btnSm" style="border:1px solid var(--line);cursor:pointer">Load image<input type="file" id="wbImg" accept="image/*" hidden></label><label class="btnSm" style="border:1px solid var(--line);cursor:pointer">Load CSV<input type="file" id="wbCsv" accept=".csv,.tsv,.txt" hidden></label><button class="btnSm" id="wbCite">Copy citation</button></div><div style="display:grid;gap:8px;margin-top:10px"><canvas id="histCanvas" width="640" height="120"></canvas><div id="wbStats" class="note">No file loaded yet.</div><img id="wbPrev" style="max-width:100%;border:1px solid var(--line);border-radius:8px;display:none" alt="Uploaded preview"></div></div>';
+  $('wbWrap').classList.add('open');
+  $('wbCite').onclick=()=>{const s=d.n+'. '+d.mod+'. '+d.c+'. '+d.f+'. Accessed via '+d.u+' (licence: '+(d.a||'check source')+').';navigator.clipboard&&navigator.clipboard.writeText(s);$('wbCite').textContent='Copied';setTimeout(()=>$('wbCite').textContent='Copy citation',1200)};
+  $('wbImg').onchange=e=>{const f=e.target.files[0];if(!f)return;const img=new Image();img.onload=()=>{const pv=$('wbPrev');pv.src=URL.createObjectURL(f);pv.style.display='block';const c=document.createElement('canvas'),g=c.getContext('2d',{willReadFrequently:true}),w=Math.min(256,img.width),h=Math.round(img.height*w/img.width);c.width=w;c.height=h;g.drawImage(img,0,0,w,h);const px=g.getImageData(0,0,w,h).data,bins=new Array(64).fill(0);let sum=0,sum2=0,n=w*h;for(let i=0;i<px.length;i+=4){const v=Math.round((px[i]+px[i+1]+px[i+2])/3/255*63);bins[v]++;sum+=px[i];sum2+=px[i]*px[i]}const mean=sum/n/255,std=Math.sqrt(sum2/n-(sum/n)*(sum/n))/255;drawHist(bins);$('wbStats').textContent='Image '+img.width+'x'+img.height+' · mean intensity '+mean.toFixed(3)+' · std '+std.toFixed(3)+' · bright-pixel fraction '+(bins.slice(48).reduce((a,b)=>a+b,0)/n*100).toFixed(1)+'%'};img.src=URL.createObjectURL(f)};
+  $('wbCsv').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const lines=String(r.result).split(/\r?\n/).filter(x=>x.trim()),head=lines[0].split(/[,;\t]/),rows=lines.slice(1).map(l=>l.split(/[,;\t]/));let nums=head.map((h,i)=>{const v=rows.map(x=>parseFloat(x[i])).filter(v=>isFinite(v));return{v,h,i}}).filter(x=>x.v.length>3);$('wbStats').innerHTML='CSV: '+rows.length+' rows x '+head.length+' cols ('+esc(head.slice(0,6).join(', '))+(head.length>6?'…':'')+'). '+nums.slice(0,4).map(x=>{const m=x.v.reduce((a,b)=>a+b,0)/x.v.length,s=Math.sqrt(x.v.reduce((a,b)=>a+(b-m)*(b-m),0)/x.v.length);return esc(x.h)+': mean '+m.toFixed(3)+', sd '+s.toFixed(3)}).join(' · ');drawHist(histOf(nums.length?nums[0].v:[1]))};r.readAsText(f)}}
+function histOf(v){const b=new Array(64).fill(0),mn=Math.min(...v),mx=Math.max(...v);v.forEach(x=>{const i=Math.max(0,Math.min(63,Math.floor((x-mn)/((mx-mn)||1)*63)));b[i]++});return b}
+function drawHist(bins){const c=$('histCanvas');if(!c)return;const g=c.getContext('2d'),mx=Math.max(...bins,1);g.clearRect(0,0,c.width,c.height);g.fillStyle='#0e7c7b';bins.forEach((b,i)=>{const h=b/mx*(c.height-14);g.fillRect(i*(c.width/64),c.height-h,c.width/64-1,h)})}
 function select(k){sel=REG[k]?k:'all';$('aR').value=sel==='all'?'all':sel;paint();chips();list();hot();autoView();show3()}
 $('q').oninput=list;
+$('wbClose').onclick=()=>$('wbWrap').classList.remove('open');
+$('wbWrap').addEventListener('click',e=>{if(e.target===$('wbWrap'))$('wbWrap').classList.remove('open')});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')$('wbWrap').classList.remove('open')});
+function dlFile(name,text){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'text/plain'}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)}
+$('expCsv').onclick=()=>{const rows=window._view||[];const q=s=>'"'+String(s??'').replace(/"/g,'""')+'"';dlFile('bodytrack-datasets.csv','name,url,modality,condition,format,access,regions,notes\n'+rows.map(d=>[d.n,d.u,d.mod,d.c,d.f,d.a,d.r.join('|'),d.t].map(q).join(',')).join('\n'))};
+$('expJson').onclick=()=>dlFile('bodytrack-datasets.json',JSON.stringify(window._view||[],null,2));
 Object.keys(REG).forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=k==='all'?'All regions':REG[k].n;$('aR').appendChild(o)});
 $('aB').onclick=()=>{const n=$('aN').value.trim();if(!n){$('aS').textContent='Enter a dataset name.';return}
   const r=$('aR').value;U.push({n,mod:$('aM').value.trim(),u:$('aU').value.trim(),t:$('aT').value.trim(),r:[r],mine:true});
