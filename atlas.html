@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BodyTrack Atlas: click a body part to find its datasets</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#070b11;--panel:#0e1621;--ink:#e6edf6;--muted:#8fa1b8;--line:#1f2c3d;--film:#03060a;--a:#3ddcc1;--amb:#ffb020;--glass:rgba(10,16,24,.74);color-scheme:dark;box-sizing:border-box}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#e9eef4;--panel:#fff;--ink:#13233a;--muted:#5b6b82;--line:#d3dbe6;--a:#0f9d8a;--amb:#d98a00;--glass:rgba(255,255,255,.85);color-scheme:light}}
+:root[data-theme="light"]{--bg:#e9eef4;--panel:#fff;--ink:#13233a;--muted:#5b6b82;--line:#d3dbe6;--a:#0f9d8a;--amb:#d98a00;--glass:rgba(255,255,255,.85);color-scheme:light}
+*{box-sizing:border-box}html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 14px/1.5 "Instrument Sans",system-ui,sans-serif;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.app{height:100%;display:grid;grid-template-columns:minmax(0,1fr) 430px;grid-template-rows:auto minmax(0,1fr);grid-template-areas:"bar bar" "stage side"}
+.bar{grid-area:bar;display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid var(--line);background:var(--panel)}
+.logo{display:flex;align-items:center;gap:9px;font-weight:700;font-size:1.05rem}
+.orb{width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,var(--a) 55%,#0a5);box-shadow:0 0 12px var(--a)}
+.sub{color:var(--muted)}.sp{flex:1}
+button,select,input,textarea{font:600 12px "Instrument Sans",sans-serif;color:var(--ink)}
+button{border:1px solid var(--line);background:transparent;padding:6px 12px;border-radius:7px;cursor:pointer}
+button:hover{border-color:var(--a)}button[aria-pressed="true"]{background:var(--a);color:#04110e;border-color:var(--a)}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--a);outline-offset:2px}
+.stage{grid-area:stage;position:relative;min-height:0;background:radial-gradient(circle at 50% 50%,rgba(61,220,193,.12),transparent 62%),linear-gradient(var(--line) 1px,transparent 1px) 0 0/48px 48px,linear-gradient(90deg,var(--line) 1px,transparent 1px) 0 0/48px 48px,var(--film)}
+#gl{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none}
+.hud{position:absolute;z-index:2;left:16px;right:16px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.top{top:14px}.bot{bottom:14px;color:#9fb2c9;font-size:12px;pointer-events:none;text-shadow:0 1px 2px #000}
+.hud button{background:var(--glass);backdrop-filter:blur(8px);color:var(--ink)}.hud button[aria-pressed="true"]{background:var(--a);color:#04110e}
+.hud button i{font-style:normal;opacity:.65;margin-left:5px}
+#hov{position:absolute;z-index:2;pointer-events:none;background:var(--glass);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:7px;padding:4px 10px;font-weight:700;font-size:12px;display:none;color:var(--ink)}
+.side{grid-area:side;overflow:auto;border-left:1px solid var(--line);background:var(--bg);padding:14px;display:flex;flex-direction:column;gap:12px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
+h2{margin:0;font-size:1.25rem}.card h3{margin:0 0 8px;font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+#rd{margin:4px 0 0;color:var(--muted)}
+.sw{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:8px}
+input[type=search],input[type=text],select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:8px 10px;font-weight:400}
+.ds{border:1px solid var(--line);border-radius:10px;padding:11px 12px;background:var(--panel)}
+.ds b{font-size:14px}.ds a{color:var(--a);font-weight:600;font-size:12px;margin-left:8px}
+.ds p{margin:4px 0 0;font-size:12.5px;color:var(--muted)}
+.tg{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}
+.tg span{font-size:10.5px;font-weight:600;border:1px solid var(--line);border-radius:99px;padding:1px 8px;color:var(--muted)}
+.tg span.me{border-color:var(--amb);color:var(--amb)}
+.empty{color:var(--muted);padding:10px 2px}
+details summary{cursor:pointer;font-weight:700}
+.f{display:grid;gap:8px;margin-top:10px}
+.note{font-size:11.5px;color:var(--muted)}
+summary:hover{color:var(--a)}.hh{margin:2px 0 -4px;font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.kp{bottom:80px}.kpi{background:var(--glass);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:9px;padding:7px 12px;min-width:96px}.kpi b{display:block;font-size:1.15rem;line-height:1.2}.kpi span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.tlb{position:absolute;z-index:2;left:16px;right:16px;bottom:14px;display:flex;gap:12px;align-items:center;background:var(--glass);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.tlb .sl{flex:1}.tlb input{width:100%;accent-color:var(--a)}.tlb b{min-width:170px;font-size:12px}
+.ev{position:relative;height:8px}.ev i{position:absolute;top:0;width:2px;height:8px;background:var(--amb);transform:translateX(-1px)}
+.alr{border-left:3px solid var(--amb);padding:3px 0 3px 10px;margin:5px 0;font-size:13px}
+@media(max-width:900px){html,body{height:auto}.kp{bottom:84px}.tlb b{min-width:90px}.app{height:auto;grid-template-columns:1fr;grid-template-rows:auto;grid-template-areas:"bar" "stage" "side"}.stage{height:70vw;min-height:340px}.side{border-left:0}}
+#gl{cursor:default;touch-action:manipulation;inset:auto;left:0;top:116px;height:calc(100% - 196px)}
+.kp{left:auto;top:116px;bottom:auto;flex-direction:column;width:124px}
+@media(max-width:900px){.stage{height:auto;min-height:880px}.sub{display:none}.kp{left:16px;right:16px;top:auto;bottom:80px;flex-direction:row;width:auto}#gl{top:236px;height:calc(100% - 410px)}}
+.b{fill:url(#sk);stroke:#6b4a38;stroke-width:1.5;cursor:pointer}.b.h{stroke:var(--c);stroke-width:2.5}.b.s{stroke:var(--c);stroke-width:3.5;filter:drop-shadow(0 0 7px var(--c))}
+.o{stroke:#fff;stroke-opacity:.45;stroke-width:1;cursor:pointer;transition:opacity .15s}.o.dim{opacity:.22}.o.h{stroke-opacity:1}.o.s{stroke-opacity:1;stroke-width:2;filter:drop-shadow(0 0 6px var(--c))}
+.noskin .b{fill-opacity:.1;stroke-opacity:.5}.hl{animation:pl 1.6s ease-in-out infinite;transform-box:fill-box;transform-origin:center}@keyframes pl{50%{transform:scale(1.3)}}
+.bar{flex-wrap:wrap}.r{display:none}.back .r{display:inline}.back .f{display:none}#mu,#bn,#rb{display:none}.mus #mu,.bone #bn,.bone #rb{display:inline}.noorg #org{display:none}.noorg:not(.bone) #sp{display:none}
+.mus .b,.bone .b{fill-opacity:.12;stroke-opacity:.55}.mus .hf,.bone .hf{opacity:.15}
+.m{fill:url(#mg);stroke:#6e2622;stroke-width:1;cursor:pointer}.e{fill:url(#bg);stroke:#a89f80;stroke-width:1;cursor:pointer}.e.l{fill:none;stroke:#efe8d2}
+.m.h,.e.h{stroke:var(--c)}.m.s,.e.s{stroke:var(--c);filter:drop-shadow(0 0 6px var(--c))}
+.app.is3d #gl,.app.is3d .kp,.app.is3d .tlb,.app.is3d #bTint,.app.is3d #bMus,.app.is3d #bBone,.app.is3d #bOrg,.app.is3d #bBack,.app.is3d #bPin{display:none}
+#v3,#v3m{position:absolute;left:0;top:116px;width:100%;height:calc(100% - 130px);display:none}#v3{border:0;background:transparent}.v3m{color:var(--muted);text-align:center;padding:60px 30px;font-size:13px}.app.is3d #v3,.app.is3d #v3m{display:block}
+@media(max-width:900px){#v3,#v3m{top:236px;height:calc(100% - 250px)}}
+</style>
+</head>
+<body>
+<div class="app is3d">
+ <header class="bar"><div class="logo"><span class="orb"></span>BodyTrack Atlas</div><span class="sub">Click a body part to see which datasets apply and track findings over time</span><div class="sp"></div><button id="b3d" aria-pressed="true">3D model</button><button id="bPin" aria-pressed="true">Hotspots</button><button id="bTint" aria-pressed="true">Skin</button><button id="bMus" aria-pressed="false">Muscles</button><button id="bBone" aria-pressed="false">Skeleton</button><button id="bOrg" aria-pressed="true">Organs</button><button id="bBack" aria-pressed="false">Back view</button></header>
+ <section class="stage">
+  <svg id="gl" viewBox="-10 0 420 880" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Human body, front or back view, with skin, muscle, skeleton and organ layers. Click the head, chest, abdomen, pelvis, arms, legs or an organ to list its datasets. The buttons above offer the same choice."><defs><linearGradient id="sk" x1="0" x2="1"><stop offset="0" stop-color="#a97c63"/><stop offset=".5" stop-color="#d9b295"/><stop offset="1" stop-color="#a97c63"/></linearGradient><linearGradient id="mg" x1="0" x2="1"><stop offset="0" stop-color="#8f3a35"/><stop offset=".5" stop-color="#cf6c62"/><stop offset="1" stop-color="#8f3a35"/></linearGradient><linearGradient id="bg" x1="0" x2="1"><stop offset="0" stop-color="#bfb598"/><stop offset=".5" stop-color="#f4eedb"/><stop offset="1" stop-color="#bfb598"/></linearGradient></defs><g id="skin"><path class="b" data-k="legs" d="M136 452C130 520 138 590 148 646L195 646C197 590 200 520 199 482Z"/><path class="b" data-k="legs" d="M136 452C130 520 138 590 148 646L195 646C197 590 200 520 199 482Z" transform="translate(400 0) scale(-1 1)"/><path class="b" data-k="legs" d="M148 646C138 690 146 740 160 806L184 806C192 745 196 690 195 646Z"/><path class="b" data-k="legs" d="M148 646C138 690 146 740 160 806L184 806C192 745 196 690 195 646Z" transform="translate(400 0) scale(-1 1)"/><path class="b" data-k="legs" d="M158 806L185 806L189 834C197 848 192 858 178 860L142 860C136 850 150 838 156 830Z"/><path class="b" data-k="legs" d="M158 806L185 806L189 834C197 848 192 858 178 860L142 860C136 850 150 838 156 830Z" transform="translate(400 0) scale(-1 1)"/><path class="b" data-k="arms" d="M144 170C122 164 110 180 108 205C106 240 100 275 96 306L123 314C128 282 135 246 141 214Z"/><path class="b" data-k="arms" d="M144 170C122 164 110 180 108 205C106 240 100 275 96 306L123 314C128 282 135 246 141 214Z" transform="translate(400 0) scale(-1 1)"/><path class="b" data-k="arms" d="M96 306L123 314C125 350 127 388 130 424L104 428C96 388 93 346 96 306Z"/><path class="b" data-k="arms" d="M96 306L123 314C125 350 127 388 130 424L104 428C96 388 93 346 96 306Z" transform="translate(400 0) scale(-1 1)"/><path class="b" data-k="arms" d="M104 428L130 424C136 452 136 474 128 494L110 498C98 478 98 452 104 428Z"/><path class="b" data-k="arms" d="M104 428L130 424C136 452 136 474 128 494L110 498C98 478 98 452 104 428Z" transform="translate(400 0) scale(-1 1)"/><path class="b" data-k="chest" d="M142 166Q200 150 258 166C274 200 270 252 262 292Q258 318 254 336L146 336Q142 318 138 292C130 252 126 200 142 166Z"/><path class="b" data-k="abdomen" d="M146 336Q152 366 150 396L250 396Q248 366 254 336Z"/><path class="b" data-k="pelvis" d="M150 396L250 396C270 418 268 452 258 470L200 492L142 470C132 452 130 418 150 396Z"/><path class="b" data-k="head" d="M185 108L185 152Q172 160 140 168L260 168Q228 160 215 152L215 108Z"/><path class="b" data-k="head" d="M200 18C228 18 240 44 240 70C240 100 224 122 200 122C176 122 160 100 160 70C160 44 172 18 200 18Z"/><path class="b" data-k="head" d="M161 68C150 64 148 90 162 96Z"/><path class="b" data-k="head" d="M161 68C150 64 148 90 162 96Z" transform="translate(400 0) scale(-1 1)"/></g><g class="hf" pointer-events="none"><path class="f" fill="#3a2a22" d="M160 64C156 30 176 12 200 12C224 12 244 30 240 64C232 44 218 36 200 36C182 36 168 44 160 64Z"/><path class="r" fill="#3a2a22" d="M160 64C156 30 176 12 200 12C224 12 244 30 240 64C240 90 226 102 200 102C174 102 160 90 160 64Z"/><g class="f" stroke="#4a3426" fill="none" stroke-width="2" stroke-linecap="round"><ellipse cx="186" cy="86" rx="5" ry="2.5" fill="#3a2a22"/><ellipse cx="214" cy="86" rx="5" ry="2.5" fill="#3a2a22"/><path d="M200 90V102M193 104Q200 108 207 104M188 114Q200 119 212 114"/><circle cx="200" cy="414" r="2.5"/></g></g><g pointer-events="none" fill="none" stroke="#6b4a38" stroke-width="1.4" stroke-linecap="round"><path d="M112 476L111 495M118 478L118 497M124 476L125 494"/><path d="M112 476L111 495M118 478L118 497M124 476L125 494" transform="translate(400 0) scale(-1 1)"/></g><g id="mu"><path class="m" data-k="arms" d="M144 170C124 164 110 178 108 206C118 214 130 206 140 190Z"/><path class="m" data-k="arms" d="M144 170C124 164 110 178 108 206C118 214 130 206 140 190Z" transform="translate(400 0) scale(-1 1)"/><path class="m" data-k="arms" d="M138 204C122 208 112 248 104 292L122 298C130 262 136 232 138 204Z"/><path class="m" data-k="arms" d="M138 204C122 208 112 248 104 292L122 298C130 262 136 232 138 204Z" transform="translate(400 0) scale(-1 1)"/><path class="m" data-k="arms" d="M100 314C98 350 104 390 110 418L124 420C126 388 126 350 122 318Z"/><path class="m" data-k="arms" d="M100 314C98 350 104 390 110 418L124 420C126 388 126 350 122 318Z" transform="translate(400 0) scale(-1 1)"/><g class="f"><path class="m" data-k="chest" d="M200 176C176 170 150 176 142 200C146 226 176 236 200 230Z"/><path class="m" data-k="chest" d="M200 176C176 170 150 176 142 200C146 226 176 236 200 230Z" transform="translate(400 0) scale(-1 1)"/><path class="m" data-k="abdomen" d="M189 300h10v22h-10zM189 326h10v22h-10zM189 352h10v22h-10zM189 378h10v18h-10z"/><path class="m" data-k="abdomen" d="M189 300h10v22h-10zM189 326h10v22h-10zM189 352h10v22h-10zM189 378h10v18h-10z" transform="translate(400 0) scale(-1 1)"/><path class="m" data-k="abdomen" d="M148 296C144 330 148 372 154 394L184 394C186 360 186 330 184 300Z"/><path class="m" data-k="abdomen" d="M148 296C144 330 148 372 154 394L184 394C186 360 186 330 184 300Z" transform="translate(400 0) scale(-1 1)"/><path class="m" data-k="legs" d="M142 470C138 530 144 590 152 636L188 636C190 590 194 530 194 494Z"/><path class="m" data-k="legs" d="M142 470C138 530 144 590 152 636L188 636C190 590 194 530 194 494Z" transform="translate(400 0) scale(-1 1)"/><path class="m" data-k="legs" d="M152 656C148 700 154 760 164 800L180 800C188 760 192 700 190 656Z"/><path class="m" data-k="legs" d="M152 656C148 700 154 760 164 800L180 800C188 760 192 700 190 656Z" transform="translate(400 0) scale(-1 1)"/><path class="m" data-k="head" d="M186 112L180 150L194 164L196 130Z"/><path class="m" data-k="head" d="M186 112L180 150L194 164L196 130Z" transform="translate(400 0) scale(-1 1)"/></g><g class="r"><path class="m" data-k="chest" d="M200 130C186 150 160 164 144 172C150 200 172 240 200 262C228 240 250 200 256 172C240 164 214 150 200 130Z"/><path class="m" data-k="chest" d="M144 212C140 260 150 316 180 360L200 360L200 266C172 254 154 236 144 212Z"/><path class="m" data-k="chest" d="M144 212C140 260 150 316 180 360L200 360L200 266C172 254 154 236 144 212Z" transform="translate(400 0) scale(-1 1)"/><path class="m" data-k="pelvis" d="M200 420C180 410 150 416 142 440C142 470 170 488 200 480Z"/><path class="m" data-k="pelvis" d="M200 420C180 410 150 416 142 440C142 470 170 488 200 480Z" transform="translate(400 0) scale(-1 1)"/><path class="m" data-k="legs" d="M142 470C138 530 144 590 152 636L188 636C190 590 194 530 194 494Z"/><path class="m" data-k="legs" d="M142 470C138 530 144 590 152 636L188 636C190 590 194 530 194 494Z" transform="translate(400 0) scale(-1 1)"/><path class="m" data-k="legs" d="M150 656C140 700 148 750 160 790L184 790C194 750 196 700 192 656Z"/><path class="m" data-k="legs" d="M150 656C140 700 148 750 160 790L184 790C194 750 196 700 192 656Z" transform="translate(400 0) scale(-1 1)"/></g></g><g id="bn"><path class="e" data-k="head" d="M170 64C168 36 184 28 200 28C216 28 232 36 230 64C230 80 224 94 214 104L186 104C176 94 170 80 170 64Z"/><g class="f" pointer-events="none"><circle cx="188" cy="80" r="5" fill="#2b2b2b"/><circle cx="212" cy="80" r="5" fill="#2b2b2b"/><path d="M200 86l-3 9h6zM190 100h20" fill="#2b2b2b" stroke="#2b2b2b"/></g><path class="e" data-k="pelvis" d="M200 398C176 392 146 398 138 424C140 446 156 452 170 450C176 440 186 430 200 428Z"/><path class="e" data-k="pelvis" d="M200 398C176 392 146 398 138 424C140 446 156 452 170 450C176 440 186 430 200 428Z" transform="translate(400 0) scale(-1 1)"/><path class="e l" data-k="arms" d="M129 182L108 306" style="stroke-width:9"/><path class="e l" data-k="arms" d="M129 182L108 306" style="stroke-width:9" transform="translate(400 0) scale(-1 1)"/><path class="e l" data-k="arms" d="M108 314L117 424" style="stroke-width:8"/><path class="e l" data-k="arms" d="M108 314L117 424" style="stroke-width:8" transform="translate(400 0) scale(-1 1)"/><path class="e l" data-k="arms" d="M112 432L109 492M118 432L118 496M124 430L127 494" style="stroke-width:3"/><path class="e l" data-k="arms" d="M112 432L109 492M118 432L118 496M124 430L127 494" style="stroke-width:3" transform="translate(400 0) scale(-1 1)"/><path class="e l" data-k="legs" d="M162 470L171 648" style="stroke-width:12"/><path class="e l" data-k="legs" d="M162 470L171 648" style="stroke-width:12" transform="translate(400 0) scale(-1 1)"/><path class="e l" data-k="legs" d="M171 654L172 806" style="stroke-width:9"/><path class="e l" data-k="legs" d="M171 654L172 806" style="stroke-width:9" transform="translate(400 0) scale(-1 1)"/><path class="e l" data-k="legs" d="M160 812L158 852M170 812L170 856M180 812L184 850" style="stroke-width:4"/><path class="e l" data-k="legs" d="M160 812L158 852M170 812L170 856M180 812L184 850" style="stroke-width:4" transform="translate(400 0) scale(-1 1)"/><g class="r"><path class="e" data-k="chest" d="M150 186L184 192L178 236L152 216Z"/><path class="e" data-k="chest" d="M150 186L184 192L178 236L152 216Z" transform="translate(400 0) scale(-1 1)"/></g></g><g id="sp"><rect x="193" y="158" width="14" height="10" rx="4" class="o" data-k="spine" fill="#e8e2d0"/><rect x="193" y="170" width="14" height="10" rx="4" class="o" data-k="spine" fill="#e8e2d0"/><rect x="193" y="183" width="14" height="10" rx="4" class="o" data-k="spine" fill="#e8e2d0"/><rect x="193" y="195" width="14" height="10" rx="4" class="o" data-k="spine" fill="#e8e2d0"/><rect x="193" y="208" width="14" height="10" rx="4" class="o" data-k="spine" fill="#e8e2d0"/><rect x="193" y="220" width="14" height="10" rx="4" class="o" data-k="spine" fill="#e8e2d0"/><rect x="193" y="233" width="14" height="10" rx="4" class="o" data-k="spine" fill="#e8e2d0"/><rect x="193" y="245" width="14" height="10" rx="4" class="o" data-k="spine" fill="#e8e2d0"/><rect x="193" y="258" width="14" height="10" rx="4" class="o" data-k="spine" fill="#e8e2d0"/><rect x="193" y="270" width="14" height="10" rx="4" class="o" data-k="spine" fill="#e8e2d0"/><rect x="193" y="283" width="14" height="10" rx="4" class="o" data-k="spine" fill="#e8e2d0"/><rect x="193" y="295" width="14" height="10" rx="4" class="o" data-k="spine" fill="#e8e2d0"/><rect x="193" y="308" width="14" height="10" rx="4" class="o" data-k="spine" fill="#e8e2d0"/><rect x="193" y="320" width="14" height="10" rx="4" class="o" data-k="spine" fill="#e8e2d0"/><rect x="193" y="333" width="14" height="10" rx="4" class="o" data-k="spine" fill="#e8e2d0"/><rect x="193" y="345" width="14" height="10" rx="4" class="o" data-k="spine" fill="#e8e2d0"/><rect x="193" y="358" width="14" height="10" rx="4" class="o" data-k="spine" fill="#e8e2d0"/><rect x="193" y="370" width="14" height="10" rx="4" class="o" data-k="spine" fill="#e8e2d0"/><rect x="193" y="383" width="14" height="10" rx="4" class="o" data-k="spine" fill="#e8e2d0"/><rect x="193" y="395" width="14" height="10" rx="4" class="o" data-k="spine" fill="#e8e2d0"/><rect x="193" y="408" width="14" height="10" rx="4" class="o" data-k="spine" fill="#e8e2d0"/><rect x="193" y="420" width="14" height="10" rx="4" class="o" data-k="spine" fill="#e8e2d0"/><rect x="193" y="433" width="14" height="10" rx="4" class="o" data-k="spine" fill="#e8e2d0"/><rect x="193" y="445" width="14" height="10" rx="4" class="o" data-k="spine" fill="#e8e2d0"/><rect x="194" y="110" width="12" height="9" rx="4" class="o" data-k="spine" fill="#e8e2d0"/><rect x="194" y="121" width="12" height="9" rx="4" class="o" data-k="spine" fill="#e8e2d0"/><rect x="194" y="132" width="12" height="9" rx="4" class="o" data-k="spine" fill="#e8e2d0"/><rect x="194" y="143" width="12" height="9" rx="4" class="o" data-k="spine" fill="#e8e2d0"/></g><g id="org"><path class="o" data-k="brain" d="M200 30C176 28 170 50 175 64C190 70 210 70 225 64C230 50 224 28 200 30Z" fill="#b79cff"/><path class="o" data-k="lungs" d="M195 188C172 184 148 204 146 254C145 288 168 300 193 292Z" fill="#6ec6ff"/><path class="o" data-k="lungs" d="M195 188C172 184 148 204 146 254C145 288 168 300 193 292Z" fill="#6ec6ff" transform="translate(400 0) scale(-1 1)"/><path class="o" data-k="heart" d="M216 232C200 222 186 242 200 266L216 294L234 266C244 242 230 224 216 232Z" fill="#ff7a8a"/><path class="o" data-k="liver" d="M148 306C170 298 206 304 216 312C214 336 190 354 160 348C148 338 144 320 148 306Z" fill="#e0a15c"/><path class="o" data-k="stomach" d="M222 304C250 298 258 330 242 350C228 360 214 346 218 330Z" fill="#ffcf6b"/><path class="o" data-k="kidneys" d="M164 358C152 360 150 384 162 392C172 390 174 366 164 358Z" fill="#7bd88f"/><path class="o" data-k="kidneys" d="M164 358C152 360 150 384 162 392C172 390 174 366 164 358Z" fill="#7bd88f" transform="translate(400 0) scale(-1 1)"/><path class="o" data-k="intestines" d="M160 388Q200 374 240 388Q254 424 230 446Q200 458 170 446Q146 424 160 388Z" fill="#f4a6c6"/><circle class="o" data-k="joints" cx="130" cy="176" r="9" fill="#cfd8e3"/><circle class="o" data-k="joints" cx="270" cy="176" r="9" fill="#cfd8e3"/><circle class="o" data-k="joints" cx="114" cy="310" r="7" fill="#cfd8e3"/><circle class="o" data-k="joints" cx="286" cy="310" r="7" fill="#cfd8e3"/><circle class="o" data-k="joints" cx="162" cy="468" r="9" fill="#cfd8e3"/><circle class="o" data-k="joints" cx="238" cy="468" r="9" fill="#cfd8e3"/><circle class="o" data-k="joints" cx="171" cy="650" r="10" fill="#cfd8e3"/><circle class="o" data-k="joints" cx="229" cy="650" r="10" fill="#cfd8e3"/><circle class="o" data-k="joints" cx="171" cy="808" r="6" fill="#cfd8e3"/><circle class="o" data-k="joints" cx="229" cy="808" r="6" fill="#cfd8e3"/></g><g id="rb"><path class="e l" data-k="chest" d="M198 196 C172 190 152 200 150 226" style="stroke-width:3.2"/><path class="e l" data-k="chest" d="M198 196 C172 190 152 200 150 226" style="stroke-width:3.2" transform="translate(400 0) scale(-1 1)"/><path class="e l" data-k="chest" d="M198 210 C172 204 152 214 150 240" style="stroke-width:3.2"/><path class="e l" data-k="chest" d="M198 210 C172 204 152 214 150 240" style="stroke-width:3.2" transform="translate(400 0) scale(-1 1)"/><path class="e l" data-k="chest" d="M198 224 C172 218 152 228 150 254" style="stroke-width:3.2"/><path class="e l" data-k="chest" d="M198 224 C172 218 152 228 150 254" style="stroke-width:3.2" transform="translate(400 0) scale(-1 1)"/><path class="e l" data-k="chest" d="M198 238 C172 232 152 242 150 268" style="stroke-width:3.2"/><path class="e l" data-k="chest" d="M198 238 C172 232 152 242 150 268" style="stroke-width:3.2" transform="translate(400 0) scale(-1 1)"/><path class="e l" data-k="chest" d="M198 252 C172 246 152 256 150 282" style="stroke-width:3.2"/><path class="e l" data-k="chest" d="M198 252 C172 246 152 256 150 282" style="stroke-width:3.2" transform="translate(400 0) scale(-1 1)"/><path class="e l" data-k="chest" d="M198 266 C172 260 152 270 150 296" style="stroke-width:3.2"/><path class="e l" data-k="chest" d="M198 266 C172 260 152 270 150 296" style="stroke-width:3.2" transform="translate(400 0) scale(-1 1)"/><path class="e l" data-k="chest" d="M198 280 C172 274 152 284 150 310" style="stroke-width:3.2"/><path class="e l" data-k="chest" d="M198 280 C172 274 152 284 150 310" style="stroke-width:3.2" transform="translate(400 0) scale(-1 1)"/><path class="e" data-k="chest" d="M196 178h8v62h-8z"/><path class="e l" data-k="chest" d="M200 176Q172 168 146 176" style="stroke-width:5"/><path class="e l" data-k="chest" d="M200 176Q172 168 146 176" style="stroke-width:5" transform="translate(400 0) scale(-1 1)"/></g><g id="pins"></g></svg>
+  <div class="hud top" id="chips" role="group" aria-label="Body parts"></div>
+  <div id="v3m" class="v3m">Loading the 3D viewer from Sketchfab. If nothing appears, you may be offline, or this page may not be allowed to show embedded sites. Press “3D model” above to switch to the drawing.</div><iframe id="v3" title="Interactive 3D anatomy model" allow="autoplay; fullscreen; xr-spatial-tracking" allowfullscreen referrerpolicy="no-referrer"></iframe>
+  <div id="hov"></div>
+  <div class="hud kp" id="kp"></div>
+  <div class="tlb"><button id="pl" aria-pressed="false">Play</button><div class="sl"><input type="range" id="tm" min="0" max="5" value="0" aria-label="Follow-up scan"><div class="ev" id="ev"></div></div><b id="tmL"></b></div>
+ </section>
+ <aside class="side">
+  <div class="card"><h2 id="rn"></h2><p id="rd"></p></div>
+  <div class="card" id="mc"><h3>3D model</h3><select id="mSel" aria-label="3D model"><option value="auto">Auto: follows the body part you pick</option><option value="mus">Muscles</option><option value="skel">Skeleton</option><option value="brain">Brain</option><option value="head">Head</option><option value="chest">Chest ribcage</option><option value="lungs">Lungs</option><option value="heart">Heart</option><option value="abdomen">Abdomen and digestive system</option><option value="liver">Liver</option><option value="stomach">Pancreas and spleen</option><option value="kidneys">Kidney</option><option value="intestines">Intestines</option><option value="spine">Spine</option><option value="joints">Knee joint</option><option value="pelvis">Pelvis</option><option value="arms">Arm</option><option value="legs">Leg bones</option></select>
+   <div class="f"><input type="text" id="mU" placeholder="Or paste any Sketchfab model link" aria-label="Sketchfab model link"><button id="mB">Use this model</button></div><p class="note" id="mT"></p></div>
+  <div class="card"><h3>Tracked hotspots here</h3><div id="hs" style="display:flex;flex-direction:column;gap:8px"></div></div>
+  <div class="card"><h3>Alerts for this scan</h3><div id="al"></div></div>
+  <h3 class="hh">Datasets for this body part</h3>
+  <input type="search" id="q" placeholder="Filter by name, modality or condition" aria-label="Filter datasets">
+  <div id="dl" style="display:flex;flex-direction:column;gap:10px" aria-live="polite"></div>
+  <details class="card"><summary>Add your own dataset</summary>
+   <div class="f">
+    <input type="text" id="aN" placeholder="Dataset name" aria-label="Dataset name">
+    <input type="text" id="aM" placeholder="Modality, e.g. MRI T1, CT, fMRI" aria-label="Modality">
+    <input type="text" id="aU" placeholder="Link (optional)" aria-label="Link">
+    <textarea id="aT" rows="2" placeholder="Notes: condition, size, format, licence" aria-label="Notes"></textarea>
+    <select id="aR" aria-label="Region"></select>
+    <button id="aB">Add to this region</button>
+    <span class="note" id="aS"></span>
+   </div>
+  </details>
+  <p class="note">The built-in list names well-known public datasets as starting points. Always check each source for current access terms and licence. Entries you add are saved in this browser.</p>
+ </aside>
+</div>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const REG={
+ all:{n:'Whole body',d:'Every dataset in the list, including whole-body collections.'},
+ brain:{n:'Brain',c:0xb79cff,d:'Thinking, movement and senses. Common targets: glioma, stroke, Alzheimer’s disease, multiple sclerosis.'},
+ lungs:{n:'Lungs',c:0x6ec6ff,d:'Breathing. Common targets: lung nodules and cancer, pneumonia, COVID-19, emphysema.'},
+ heart:{n:'Heart',c:0xff7a8a,d:'Pumps blood. Common targets: cardiomyopathy, damage after a heart attack, pumping function.'},
+ liver:{n:'Liver',c:0xe0a15c,d:'Filters blood and makes bile. Common targets: liver tumours, cirrhosis, fatty liver.'},
+ stomach:{n:'Stomach and pancreas',c:0xffcf6b,d:'Digestion and blood sugar control. Common targets: pancreatic cancer, stomach disease.'},
+ kidneys:{n:'Kidneys',c:0x7bd88f,d:'Filter waste from blood. Common targets: kidney tumours, cysts, chronic kidney disease.'},
+ intestines:{n:'Intestines',c:0xf4a6c6,d:'Absorb nutrients. Common targets: colon polyps and cancer, Crohn’s disease.'},
+ spine:{n:'Spine',c:0xe8e2d0,d:'Protects the spinal cord. Common targets: fractures, vertebra labelling, degenerative disease.'},
+ joints:{n:'Joints and limbs',c:0xcfd8e3,d:'Knees, hips and shoulders. Common targets: osteoarthritis, fractures, ligament injuries.'},
+ head:{n:'Head and neck',c:0xc9b8ff,k:['brain'],d:'Skull, face and neck, with the brain inside. Common targets: head injury, tumours, stroke, skull fractures.'},
+ chest:{n:'Chest',c:0x8fd3ff,k:['lungs','heart'],d:'Ribcage with the lungs and heart. Common targets: pneumonia, lung nodules, heart size, rib fractures.'},
+ abdomen:{n:'Abdomen',c:0xf2c27a,k:['liver','stomach','kidneys','intestines'],d:'Digestive and filtering organs. Common targets: liver, pancreas, kidney and bowel disease.'},
+ pelvis:{n:'Pelvis and hips',c:0xd8a0e8,d:'Pelvic bones, hips and bladder. Common targets: hip fractures, osteoarthritis, pelvic tumours.'},
+ arms:{n:'Arms and hands',c:0xffb38a,d:'Shoulders to fingertips. Common targets: wrist and elbow fractures, bone age, arthritis.'},
+ legs:{n:'Legs and feet',c:0x9fe0b0,d:'Thighs to toes. Common targets: knee osteoarthritis, ligament tears, stress fractures.'}};
+const ALL=['all'],X=(n,u,mod,c,f,a,r,t)=>({n,u,mod,c,f,a,r,t});
+// Edit this list to add datasets. r = body parts it applies to ('all' = every part).
+const D=[
+ X('BraTS','https://www.med.upenn.edu/cbica/brats/','MRI T1, T1ce, T2, FLAIR','Glioma','NIfTI','Registration',['brain'],'Expert tumour labels, skull-stripped, many hospitals.'),
+ X('Medical Segmentation Decathlon','http://medicaldecathlon.com/','CT and MRI','Ten tasks: brain, heart, liver, lung, pancreas, colon and more','NIfTI','Free download',['brain','heart','liver','lungs','stomach','intestines'],'Ten segmentation tasks in a common format.'),
+ X('ADNI','https://adni.loni.usc.edu/','MRI, PET','Alzheimer’s disease','DICOM, NIfTI','Application required',['brain'],'Long follow-up scans, ideal for progression tracking.'),
+ X('OASIS','https://www.oasis-brains.org/','MRI, PET','Ageing, Alzheimer’s disease','NIfTI','Registration',['brain'],'Healthy and demented adults with clinical scores.'),
+ X('IXI','https://brain-development.org/ixi-dataset/','MRI T1, T2, MRA, DTI','Healthy adults','NIfTI','Free download',['brain'],'About 600 healthy brains from three scanners.'),
+ X('Human Connectome Project','https://www.humanconnectome.org/','MRI, fMRI, diffusion','Healthy connectivity','NIfTI','Registration',['brain'],'High-resolution scans for brain networks.'),
+ X('ATLAS stroke lesions','https://fcon_1000.projects.nitrc.org/indi/retro/atlas.html','MRI T1','Stroke','NIfTI','Free download',['brain'],'T1 scans with traced lesion masks.'),
+ X('ISLES challenge','https://www.isles-challenge.org/','MRI (DWI, ADC, FLAIR)','Ischaemic stroke','NIfTI','Challenge registration',['brain'],'Benchmark for stroke lesion segmentation.'),
+ X('LIDC-IDRI','https://www.cancerimagingarchive.net/collection/lidc-idri/','CT','Lung nodules','DICOM','Free download',['lungs'],'Chest CT with nodule annotations from several radiologists.'),
+ X('LUNA16','https://luna16.grand-challenge.org/','CT','Lung nodule detection','MetaImage','Challenge registration',['lungs'],'Curated subset of LIDC-IDRI for detection benchmarks.'),
+ X('NIH ChestX-ray14','https://nihcc.app.box.com/v/ChestXray-NIHCC','Chest X-ray','14 chest conditions','PNG','Free download',['lungs','heart','spine'],'Over 100,000 frontal X-rays with text-mined labels.'),
+ X('CheXpert','https://stanfordmlgroup.github.io/competitions/chexpert/','Chest X-ray','Common chest conditions','JPEG','Registration',['lungs','heart'],'Large labelled set with uncertainty labels.'),
+ X('MIMIC-CXR','https://physionet.org/content/mimic-cxr/','Chest X-ray, reports','Chest conditions','DICOM, JPEG','Credentialed access',['lungs','heart'],'X-rays linked to radiology reports.'),
+ X('ACDC','https://www.creatis.insa-lyon.fr/Challenge/acdc/','Cardiac MRI','Cardiomyopathy, infarction','NIfTI','Free download',['heart'],'Heart chamber segmentation across disease groups.'),
+ X('M&Ms','https://www.ub.edu/mnms/','Cardiac MRI','Heart disease, multi-vendor','NIfTI','Free download',['heart'],'Tests how well models work across scanner brands.'),
+ X('MM-WHS','http://www.sdspeople.fudan.edu.cn/zhuangxiahai/0/mmwhs/','CT, MRI','Whole-heart anatomy','NIfTI','Registration',['heart'],'Whole-heart segmentation benchmark.'),
+ X('LiTS','https://competitions.codalab.org/competitions/17094','CT','Liver tumours','NIfTI','Challenge registration',['liver'],'Liver and tumour segmentation from many centres.'),
+ X('CHAOS','https://chaos.grand-challenge.org/','CT, MRI','Healthy abdominal organs','DICOM','Free download',['liver','kidneys','stomach'],'Liver, kidneys and spleen on CT and MRI.'),
+ X('KiTS','https://kits-challenge.org/','CT','Kidney tumours and cysts','NIfTI','Free download',['kidneys'],'Kidney, tumour and cyst segmentation.'),
+ X('NIH Pancreas-CT','https://www.cancerimagingarchive.net/collection/pancreas-ct/','CT','Pancreas','DICOM','Free download',['stomach'],'Contrast CT with pancreas outlines.'),
+ X('CT Colonography','https://www.cancerimagingarchive.net/collection/ct-colonography/','CT','Colon polyps','DICOM','Free download',['intestines'],'Screening scans for polyp detection.'),
+ X('VerSe','https://github.com/anjany/verse','CT','Vertebra labelling and segmentation','NIfTI','Free download',['spine'],'Labelled vertebrae across scanners and conditions.'),
+ X('RSNA cervical spine fractures','https://www.kaggle.com/competitions/rsna-2022-cervical-spine-fracture-detection','CT','Neck vertebra fractures','DICOM','Kaggle account',['spine'],'Fracture detection with expert annotations.'),
+ X('MURA','https://stanfordmlgroup.github.io/competitions/mura/','X-ray','Bone and joint abnormalities','PNG','Registration',['joints'],'Upper-limb radiographs labelled normal or abnormal.'),
+ X('Osteoarthritis Initiative','https://nda.nih.gov/oai/','MRI, X-ray','Knee osteoarthritis','DICOM','Application required',['joints'],'Long-term knee study with imaging and clinical data.'),
+ X('fastMRI','https://fastmri.med.nyu.edu/','MRI raw data','Knee and brain scans','HDF5','Registration',['joints','brain'],'Raw scanner data for faster MRI reconstruction.'),
+ X('BTCV multi-organ','https://www.synapse.org/Synapse:syn3193805','CT','13 abdominal organs','NIfTI','Registration',['liver','kidneys','stomach','intestines'],'Multi-organ abdominal segmentation.'),
+ X('AMOS','https://amos22.grand-challenge.org/','CT, MRI','15 abdominal organs','NIfTI','Registration',['liver','kidneys','stomach','intestines','spine'],'Large multi-organ set from several hospitals.'),
+ X('TotalSegmentator','https://github.com/wasserth/TotalSegmentator','CT','Over 100 structures','NIfTI','Free download',['brain','lungs','heart','liver','stomach','kidneys','intestines','spine','joints'],'Whole-body CT labels. The dataset is shared on Zenodo.'),
+ X('The Cancer Imaging Archive','https://www.cancerimagingarchive.net/','CT, MRI, PET, X-ray','Many cancers','DICOM','Mostly free',ALL,'Large archive of cancer imaging collections.'),
+ X('UK Biobank imaging','https://www.ukbiobank.ac.uk/','MRI, DXA','Population health','DICOM, NIfTI','Application required',['brain','heart','liver','joints'],'Very large cohort with brain, heart and body scans.'),
+ X('OpenNeuro','https://openneuro.org/','MRI, fMRI, EEG','Many brain studies','NIfTI (BIDS)','Free download',['brain'],'Hundreds of community-shared studies.')
+];
+D.push(X('CQ500 head CT','http://headctstudy.qure.ai/dataset','CT','Brain bleeds, fractures','DICOM','Free download',['brain', 'head'],'Head CT scans read by three radiologists.'),
+ X('RSNA Intracranial Hemorrhage','https://www.kaggle.com/c/rsna-intracranial-hemorrhage-detection','CT','Brain haemorrhage','DICOM','Kaggle account',['brain', 'head'],'Large head CT set with bleed subtypes.'),
+ X('MSSEG multiple sclerosis','https://portal.fli-iam.irisa.fr/msseg-challenge/','MRI','Multiple sclerosis','NIfTI','Registration',['brain'],'MS lesion segmentation challenge data.'),
+ X('ABIDE','http://fcon_1000.projects.nitrc.org/indi/abide/','MRI, fMRI','Autism','NIfTI','Free download',['brain'],'Brain scans from autism and control groups.'),
+ X('PPMI','https://www.ppmi-info.org/','MRI, DaTscan','Parkinson’s disease','DICOM','Application required',['brain'],'Long-term Parkinson’s study with imaging.'),
+ X('HECKTOR','https://hecktor.grand-challenge.org/','PET/CT','Head and neck cancer','NIfTI','Challenge registration',['head'],'Tumour segmentation and outcome prediction.'),
+ X('HaN-Seg','https://han-seg2023.grand-challenge.org/','CT, MRI','Head and neck organs at risk','NIfTI','Challenge registration',['head'],'Organ outlines for radiotherapy planning.'),
+ X('VinDr-CXR','https://physionet.org/content/vindr-cxr/','Chest X-ray','Lung and heart findings','DICOM','Credentialed access',['lungs', 'heart'],'Vietnamese hospital X-rays with box annotations.'),
+ X('PadChest','https://bimcv.cipf.es/bimcv-projects/padchest/','Chest X-ray, reports','Many chest findings','PNG','Free download',['lungs', 'heart'],'Over 160,000 Spanish chest X-rays with reports.'),
+ X('NLST','https://cdas.cancer.gov/nlst/','Low-dose CT','Lung cancer screening','DICOM','Application required',['lungs'],'Large lung screening trial with outcomes.'),
+ X('RSNA Pneumonia Detection','https://www.kaggle.com/c/rsna-pneumonia-detection-challenge','Chest X-ray','Pneumonia','DICOM','Kaggle account',['lungs'],'Boxes around pneumonia on chest X-rays.'),
+ X('Shenzhen and Montgomery TB','https://lhncbc.nlm.nih.gov/LHC-downloads/downloads.html','Chest X-ray','Tuberculosis','PNG','Free download',['lungs'],'Small TB X-ray sets with masks.'),
+ X('EchoNet-Dynamic','https://echonet.github.io/dynamic/','Echocardiography','Heart function','AVI','Registration',['heart'],'10,000 heart ultrasound videos.'),
+ X('CAMUS','https://www.creatis.insa-lyon.fr/Challenge/camus/','Echocardiography','Heart chambers','NIfTI','Free download',['heart'],'Two- and four-chamber ultrasound with outlines.'),
+ X('PTB-XL','https://physionet.org/content/ptb-xl/','ECG','Heart rhythm and disease','WFDB','Free download',['heart'],'21,000 12-lead ECGs with diagnoses.'),
+ X('MIT-BIH Arrhythmia','https://physionet.org/content/mitdb/','ECG','Arrhythmia','WFDB','Free download',['heart'],'Classic annotated heartbeat recordings.'),
+ X('3D-IRCADb','https://www.ircad.fr/research/data-sets/liver-segmentation-3d-ircadb-01/','CT','Liver tumours','DICOM','Free download',['liver'],'Small set with liver and vessel outlines.'),
+ X('PANORAMA','https://panorama.grand-challenge.org/','CT','Pancreatic cancer','NIfTI','Challenge registration',['stomach', 'abdomen'],'Pancreas cancer detection benchmark.'),
+ X('CT-ORG','https://www.cancerimagingarchive.net/collection/ct-org/','CT','Six organs','NIfTI','Free download',['liver', 'kidneys', 'lungs', 'brain', 'pelvis'],'Multi-organ CT with outlines.'),
+ X('Kvasir and HyperKvasir','https://datasets.simula.no/hyper-kvasir/','Endoscopy','Gut disease and polyps','JPEG, video','Free download',['intestines', 'stomach'],'Labelled endoscopy images from the digestive tract.'),
+ X('CTSpine1K','https://github.com/MIRACLE-Center/CTSpine1K','CT','Vertebra outlines','NIfTI','Free download',['spine'],'1,000 spine CTs with vertebra labels.'),
+ X('RSNA Lumbar Spine 2024','https://www.kaggle.com/competitions/rsna-2024-lumbar-spine-degenerative-classification','MRI','Lumbar spine degeneration','DICOM','Kaggle account',['spine'],'Lower back MRI with condition labels.'),
+ X('RSNA Bone Age','https://www.kaggle.com/competitions/rsna-bone-age','Hand X-ray','Bone age','PNG','Kaggle account',['arms', 'joints'],'Hand X-rays labelled with age.'),
+ X('GRAZPEDWRI-DX','https://figshare.com/articles/dataset/GRAZPEDWRI-DX/14825193','Wrist X-ray','Children’s wrist fractures','PNG','Free download',['arms'],'Paediatric wrist trauma with boxes.'),
+ X('MRNet','https://stanfordmlgroup.github.io/competitions/mrnet/','Knee MRI','ACL and meniscus tears','NumPy','Registration',['legs', 'joints'],'1,370 knee MRI exams.'),
+ X('SKI10','https://ski10.grand-challenge.org/','Knee MRI','Knee bone and cartilage','MetaImage','Registration',['legs', 'joints'],'Knee bone and cartilage segmentation.'),
+ X('CTPelvic1K','https://github.com/ICT-MIRACLE-lab/CTPelvic1K','CT','Pelvic bones','NIfTI','Free download',['pelvis'],'Pelvis CT with bone labels.'),
+ X('LERA lower extremity X-rays','https://aimi.stanford.edu/lera-lower-extremity-radiographs','X-ray','Foot, ankle, knee, hip','DICOM','Registration',['legs', 'pelvis'],'Lower limb radiographs.'),
+ X('AbdomenAtlas','https://github.com/MrGiovanni/AbdomenAtlas','CT','Many abdominal organs','NIfTI','Free download',['abdomen', 'pelvis'],'Very large abdominal CT labels.'),
+ X('DeepLesion','https://nihcc.app.box.com/v/DeepLesion','CT','Lesions across the body','PNG','Free download',ALL,'Over 32,000 marked lesions on CT slices.'),
+ X('autoPET','https://autopet.grand-challenge.org/','Whole-body PET/CT','Tumours','NIfTI','Challenge registration',ALL,'Whole-body PET/CT tumour outlines.'),
+ X('MedMNIST','https://medmnist.com/','Many types','Many conditions','NumPy','Free download',ALL,'Small standardised sets for quick tests.'),
+ X('RadImageNet','https://www.radimagenet.com/','CT, MRI, ultrasound','Many conditions','JPEG','Registration',ALL,'Large labelled radiology images.'),
+ X('Visible Human Project','https://www.nlm.nih.gov/research/visible/visible_human.html','CT, MRI, photographs','Normal anatomy','Raw','Licence required',ALL,'Full-body anatomy slices from two donors.'),
+ X('ISIC Archive','https://www.isic-archive.com/','Skin photographs','Skin cancer','JPEG','Free download',ALL,'Skin lesion images from the whole body.'));
+D.push(X('Soft-tissue sarcoma','https://www.cancerimagingarchive.net/collection/soft-tissue-sarcoma/','MRI, PET/CT','Sarcoma of the limbs and trunk','DICOM','Free download',['arms', 'legs', 'pelvis'],'Imaging of soft-tissue sarcomas with segmentations.'),
+ X('Osteosarcoma tumour assessment','https://www.cancerimagingarchive.net/collection/osteosarcoma-tumor-assessment/','Histology','Bone cancer (osteosarcoma)','Images','Free download',['arms', 'legs'],'Bone tumour images for assessing treatment response.'),
+ X('OAI-ZIB knee segmentation','https://pubdata.zib.de/','MRI','Knee bone and cartilage','NIfTI','Free download',['legs', 'joints'],'Knee MRI from the Osteoarthritis Initiative with bone and cartilage outlines.'),
+ X('TCGA-KIRC','https://www.cancerimagingarchive.net/collection/tcga-kirc/','CT, MRI','Kidney cancer (clear cell)','DICOM','Free download',['kidneys'],'Imaging for kidney clear cell carcinoma cases.'),
+ X('C4KC-KiTS','https://www.cancerimagingarchive.net/collection/c4kc-kits/','CT','Kidney tumours','DICOM','Free download',['kidneys'],'The source scans behind the KiTS challenge.'),
+ X('CVC-ClinicDB','https://polyp.grand-challenge.org/CVCClinicDB/','Colonoscopy','Colon polyps','TIFF','Registration',['intestines'],'Frames from colonoscopy videos with polyp masks.'),
+ X('TCGA-COAD','https://www.cancerimagingarchive.net/collection/tcga-coad/','CT','Colon cancer','DICOM','Free download',['intestines'],'Imaging for colon adenocarcinoma cases.'),
+ X('SpineWeb','https://spineweb.digitalimaginggroup.ca/','CT, MRI','Spine segmentation and labelling','Mixed','Free download',['spine'],'Hub of public spine imaging datasets.'),
+ X('SPIDER lumbar MRI','https://spider.grand-challenge.org/','MRI','Lumbar spine segmentation','MetaImage','Free download',['spine'],'Lower back MRI with vertebra and disc outlines.'),
+ X('PI-CAI','https://pi-cai.grand-challenge.org/','MRI','Prostate cancer','NIfTI','Free download',['pelvis'],'Prostate MRI for cancer detection.'),
+ X('PROMISE12','https://promise12.grand-challenge.org/','MRI','Prostate segmentation','MetaImage','Registration',['pelvis'],'Prostate MRI with expert outlines.'),
+ X('Prostate-MRI-US-Biopsy','https://www.cancerimagingarchive.net/collection/prostate-mri-us-biopsy/','MRI, ultrasound','Prostate cancer','DICOM','Free download',['pelvis'],'MRI and ultrasound biopsy data.'),
+ X('TCGA-LIHC','https://www.cancerimagingarchive.net/collection/tcga-lihc/','CT, MRI','Liver cancer','DICOM','Free download',['liver'],'Imaging for hepatocellular carcinoma cases.'),
+ X('Colorectal liver metastases','https://www.cancerimagingarchive.net/collection/colorectal-liver-metastases/','CT, MRI','Liver metastases','DICOM','Free download',['liver'],'Preoperative scans with liver and tumour outlines.'),
+ X('TCGA-STAD','https://www.cancerimagingarchive.net/collection/tcga-stad/','CT','Stomach cancer','DICOM','Free download',['stomach'],'Imaging for stomach adenocarcinoma cases.'),
+ X('CPTAC-PDA','https://www.cancerimagingarchive.net/collection/cptac-pda/','CT, MRI','Pancreatic cancer','DICOM','Free download',['stomach'],'Imaging for pancreatic ductal adenocarcinoma.'),
+ X('Head-Neck-PET-CT','https://www.cancerimagingarchive.net/collection/head-neck-pet-ct/','PET/CT','Head and neck cancer','DICOM','Free download',['head'],'Radiotherapy planning scans with outlines.'));
+const QK={all:'medical imaging',brain:'brain MRI',lungs:'lung CT',heart:'cardiac imaging',liver:'liver CT',stomach:'pancreas CT',kidneys:'kidney CT',intestines:'colon CT',spine:'spine CT',joints:'joint MRI',head:'head CT',chest:'chest X-ray',abdomen:'abdominal CT',pelvis:'pelvis CT',arms:'arm X-ray',legs:'leg knee X-ray'};
+const UP={head:['brain'],chest:['lungs','heart'],abdomen:['liver','stomach','kidneys','intestines']};
+D.forEach(d=>Object.keys(UP).forEach(k=>{if(d.r.some(x=>UP[k].includes(x)))d.r=d.r.concat(k)}));
+const add=(n,...ks)=>{const d=D.find(x=>x.n===n);if(d)d.r=d.r.concat(ks)};
+add('Osteoarthritis Initiative','legs','pelvis');add('fastMRI','legs');add('MURA','arms');add('AMOS','pelvis');add('Medical Segmentation Decathlon','pelvis');add('UK Biobank imaging','legs','pelvis');add('TotalSegmentator','arms','legs','pelvis');
+D.push(X('FracAtlas','https://figshare.com/articles/dataset/The_dataset/22363012','X-ray','Bone fractures','JPEG','Free download',['arms','legs','pelvis'],'Fracture X-rays of the hand, wrist, leg, hip and shoulder.'));
+let U=[];try{U=JSON.parse(localStorage.getItem('ntatlas')||'[]')}catch(e){}
+let sel='brain',hover=null,spin=true;
+
+const CASE={months:[0,3,6,9,12,15],
+ lesions:[{id:'A',name:'Lung nodule',r:'lungs',pos:[-.3,.8,.22],color:'#ff5d73',v:[2.1,3.4,4.8,3,1.9,1.4]},
+ {id:'B',name:'Liver lesion',r:'liver',pos:[-.22,.14,.24],color:'#ffb020',v:[0,1.2,2.4,3.1,4.6,6]},
+ {id:'C',name:'Brain lesion',r:'brain',pos:[.1,1.74,.3],color:'#3ddcc1',v:[.9,.9,.8,.8,.7,.7]},
+ {id:'D',name:'Kidney cyst',r:'kidneys',pos:[.22,-.02,-.08],color:'#6ea8ff',v:[1,1,1.1,1,1,1.1]}],
+ events:[{month:1,label:'Radiotherapy starts'},{month:3,label:'Chemotherapy, cycle 1'},{month:9,label:'Dose paused'},{month:12,label:'Trial drug added'}]};
+let tIdx=0,showPins=true,tintOn=true;const pins=[];
+/* ---------- Body figure ---------- */
+const svg=$('gl'),pinG=$('pins'),NS='http://www.w3.org/2000/svg',XY={A:[172,240],B:[176,326],C:[212,52],D:[236,374]};
+CASE.lesions.forEach(l=>{const g=document.createElementNS(NS,'g');g.setAttribute('pointer-events','none');g.setAttribute('transform','translate('+XY[l.id]+')');g.innerHTML='<circle class="hl" fill="'+l.color+'" opacity=".3"/><circle fill="'+l.color+'" stroke="#fff" stroke-width="1.5"/>';pinG.appendChild(g);pins.push({l,g,halo:g.children[0],core:g.children[1]})});
+const els=[...svg.querySelectorAll('[data-k]')],keyOf=e=>{const t=e.target.closest('[data-k]');return t?t.dataset.k:null};
+svg.onclick=e=>{const k=keyOf(e);if(k)select(k)};
+svg.onpointermove=e=>{const k=keyOf(e);if(k!==hover){hover=k;paint()}const h=$('hov');if(k){h.style.display='block';h.textContent=REG[k].n;const b=svg.parentElement.getBoundingClientRect();h.style.left=Math.min(b.width-150,e.clientX-b.left+14)+'px';h.style.top=(e.clientY-b.top+14)+'px'}else h.style.display='none'};
+svg.onpointerleave=()=>{hover=null;$('hov').style.display='none';paint()};
+function paint(){els.forEach(m=>{const k=m.dataset.k,s=sel===k;m.classList.toggle('s',s);m.classList.toggle('h',hover===k&&!s);m.style.setProperty('--c','#'+(REG[k].c||0).toString(16).padStart(6,'0'));
+  if(m.classList.contains('o'))m.classList.toggle('dim',!(sel==='all'||s||(REG[sel].k||[]).includes(k)))})}
+paint();
+
+/* ---------- Dataset panel ---------- */
+const all=()=>D.concat(U);
+const has=(d,k)=>k==='all'||d.r.includes(k)||d.r.includes('all');
+function chips(){const c=$('chips');c.innerHTML='';Object.keys(REG).filter(k=>k!=='all').forEach(k=>{const b=document.createElement('button');b.setAttribute('aria-pressed',k===sel);b.innerHTML=REG[k].n+'<i>'+all().filter(d=>has(d,k)).length+'</i>';b.onclick=()=>select(k);c.appendChild(b)})}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function list(){
+  const q=$('q').value.toLowerCase().trim(),r=REG[sel];
+  $('rn').innerHTML=(r.c?'<span class="sw" style="background:#'+r.c.toString(16).padStart(6,'0')+'"></span>':'')+r.n;$('rd').textContent=r.d;
+  const ds=all().filter(d=>has(d,sel)&&(!q||[d.n,d.mod,d.c,d.t].join(' ').toLowerCase().includes(q))).sort((a,b)=>(a.r.includes('all')?1:0)-(b.r.includes('all')?1:0));
+  $('dl').innerHTML=ds.length?ds.map(d=>'<div class="ds"><b>'+esc(d.n)+'</b>'+(d.u&&/^https?:\/\//.test(d.u)?'<a href="'+esc(d.u)+'" target="_blank" rel="noopener noreferrer">Source</a>':'')+'<p>'+esc(d.t||'')+'</p><div class="tg"><span>'+esc(d.mod||'')+'</span>'+(d.c?'<span>'+esc(d.c)+'</span>':'')+(d.f?'<span>'+esc(d.f)+'</span>':'')+(d.a?'<span>'+esc(d.a)+'</span>':'')+(d.r.includes('all')&&sel!=='all'?'<span>Whole-body set</span>':'')+(d.mine?'<span class="me">Added by you</span>':'')+'</div></div>').join(''):'<div class="empty">No datasets listed for this region yet. Add one below.</div>';
+  const qq=QK[sel]||'medical imaging';$('dl').innerHTML+='<div class="ds"><b>Search everywhere for this region</b><p>No list covers every dataset. These open live searches for '+esc(qq)+'.</p><div class="tg">'+[['Google Dataset Search','https://datasetsearch.research.google.com/search?query=',1],['Kaggle','https://www.kaggle.com/search?q=',1],['Zenodo','https://zenodo.org/search?q=',1],['Hugging Face','https://huggingface.co/datasets?search=',1],['Grand Challenge','https://grand-challenge.org/challenges/'],['TCIA collections','https://www.cancerimagingarchive.net/browse-collections/'],['PhysioNet','https://physionet.org/about/database/']].map(l=>'<span><a style="margin:0" href="'+l[1]+(l[2]?encodeURIComponent(qq):'')+'" target="_blank" rel="noopener noreferrer">'+l[0]+'</a></span>').join('')+'</div></div>'}
+function select(k){sel=REG[k]?k:'all';$('aR').value=sel==='all'?'all':sel;paint();chips();list();hot();autoView();show3()}
+$('q').oninput=list;
+Object.keys(REG).forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=k==='all'?'All regions':REG[k].n;$('aR').appendChild(o)});
+$('aB').onclick=()=>{const n=$('aN').value.trim();if(!n){$('aS').textContent='Enter a dataset name.';return}
+  const r=$('aR').value;U.push({n,mod:$('aM').value.trim(),u:$('aU').value.trim(),t:$('aT').value.trim(),r:[r],mine:true});
+  try{localStorage.setItem('ntatlas',JSON.stringify(U))}catch(e){}
+  ['aN','aM','aU','aT'].forEach(i=>$(i).value='');$('aS').textContent='Added.';chips();list()};
+
+const tot=CASE.months.map((_,i)=>CASE.lesions.reduce((q,l)=>q+l.v[i],0)),maxM=Math.max(...CASE.months);
+function stat(i){if(!i)return['Baseline','#8fa1b8'];const nad=Math.min(...tot.slice(0,i)),d=(tot[i]-tot[0])/tot[0];if(tot[i]>=nad*1.25)return['Progression','#ff5d73'];if(d<=-.4)return['Partial response','#4cd98a'];return['Stable','#8fa1b8']}
+function setPins(){pins.forEach(p=>{const v=p.l.v[tIdx],r=2+4.5*Math.cbrt(v);p.g.style.display=showPins&&v>0?'':'none';p.core.setAttribute('r',r);p.halo.setAttribute('r',r*2)})}
+function hot(){
+  const i=tIdx,st=stat(i),d=(tot[i]-tot[0])/tot[0]*100,n=CASE.lesions.filter(l=>l.v[i]>0).length;
+  $('kp').innerHTML=[[tot[i].toFixed(1),'Volume mL'],[(d>0?'+':'')+d.toFixed(0)+'%','vs baseline'],[n,'Lesions'],[st[0],'Status']].map((x,j)=>'<div class="kpi"><b'+(j===3?' style="color:'+st[1]+'"':'')+'>'+x[0]+'</b><span>'+x[1]+'</span></div>').join('');
+  const rows=CASE.lesions.filter(l=>sel==='all'||l.r===sel||(REG[sel].k||[]).includes(l.r));
+  $('hs').innerHTML=rows.length?rows.map(l=>{const v=l.v[i],p=i?l.v[i-1]:null;let ch='baseline',b='Stable';
+    if(!v){ch='–';b='Not seen'}else if(p===0){ch='new';b='New'}else if(p!==null){const q=(v-p)/p*100;ch=(q>0?'+':'')+q.toFixed(0)+'%';b=q>=15?'Growing':q<=-15?'Shrinking':'Stable'}
+    return '<div class="ds"><b><span class="sw" style="background:'+l.color+'"></span>'+l.id+' · '+esc(l.name)+'</b><p>'+REG[l.r].n+' · '+(v?v.toFixed(1)+' mL':'not seen')+'</p><div class="tg"><span>'+ch+'</span><span>'+b+'</span></div></div>'}).join(''):'<div class="empty">No tracked lesions in this region.</div>';
+  const al=[];if(i){CASE.lesions.forEach(l=>{const v=l.v[i],p=l.v[i-1],w=REG[l.r].n.toLowerCase();
+    if(p===0&&v>0)al.push('New lesion '+l.id+' in the '+w+' ('+v.toFixed(1)+' mL).');else if(p>0&&(v-p)/p>=.25)al.push('Lesion '+l.id+' in the '+w+' grew '+Math.round((v-p)/p*100)+'%.');else if(p>0&&(v-p)/p<=-.25)al.push('Lesion '+l.id+' in the '+w+' shrank '+Math.round((p-v)/p*100)+'%.')});
+    if(st[0]==='Progression')al.unshift('Total volume is 25% or more above its lowest earlier value. Flag for clinician review.')}
+  $('al').innerHTML=al.length?al.map(a=>'<div class="alr">'+a+'</div>').join(''):'<div class="empty">'+(i?'No significant change since the previous scan.':'Baseline scan. Tracking starts here.')+'</div>'}
+function setT(i){tIdx=i;$('tm').value=i;const ev=CASE.events.filter(e=>e.month<=CASE.months[i]).pop();$('tmL').textContent='Month '+CASE.months[i]+(ev?' · '+ev.label:'');setPins();hot()}
+$('ev').innerHTML=CASE.events.map(e=>'<i title="'+esc(e.label)+'" style="left:'+e.month/maxM*100+'%"></i>').join('');
+$('tm').oninput=e=>setT(+e.target.value);
+let timer=0;$('pl').onclick=e=>{if(timer){clearInterval(timer);timer=0;e.target.textContent='Play';e.target.setAttribute('aria-pressed',false);return}
+  e.target.textContent='Pause';e.target.setAttribute('aria-pressed',true);if(tIdx===CASE.months.length-1)setT(0);
+  timer=setInterval(()=>{if(tIdx>=CASE.months.length-1){clearInterval(timer);timer=0;$('pl').textContent='Play';$('pl').setAttribute('aria-pressed',false);return}setT(tIdx+1)},1300)};
+$('bPin').onclick=e=>{showPins=!showPins;e.target.setAttribute('aria-pressed',showPins);setPins()};
+[['bMus','mus',0],['bBone','bone',0],['bOrg','noorg',1],['bBack','back',0]].forEach(([i,c,v])=>{$(i).onclick=e=>{const t=e.currentTarget,on=t.getAttribute('aria-pressed')!=='true';t.setAttribute('aria-pressed',on);svg.classList.toggle(c,v?!on:on)}});
+$('bTint').onclick=e=>{tintOn=!tintOn;e.target.setAttribute('aria-pressed',tintOn);svg.classList.toggle('noskin',!tintOn)};
+/* ---------- 3D viewer (Sketchfab embed) ---------- */
+const MD={mus:['ab11ebff89224f03bd75efede1164cf6','Male Full Body Ecorche (muscles)'],skel:['4de7b96a351a4a35b1b6e5415277ff07','Skeleton by Diego Luj\u00e1n Garc\u00eda'],
+ brain:['02463f38cad94a81846bb8de9b1cb9b1','Brain'],lungs:['b405d532359a4efe8fba1185c777860d','Full lung'],heart:['3b50017ba1ff4403b385fb72c6a8378b','Human heart'],stomach:['5ea30b7d1fd748a3ae989efbb3b65936','Duodenum, pancreas, spleen'],intestines:['6f96e9b0ca5e4c28a8c7a6d27ec95a16','Large and small intestines'],head:['59e3fc50a3b54e78a1719472b43216c3','Head anatomy'],
+ liver:['6c4e9bd0d49f4828b804259330c0c6c4','Human liver and gallbladder'],kidneys:['e1476ceb1e3b4412af5418eee9c5ed08','Human kidney'],spine:['bcd9eee09ce044ef98a69c315aa792e2','The human spinal column'],joints:['bd50aacad58b488ea80ed973b4874a08','Knee anatomy'],arms:['766b8b8d086a495793e28bcdbc5a5aa1','Human arm'],legs:['8b610c5ee6424015b8300b6aa303f902','Leg bones'],pelvis:['6e04b899c5204a4eae1d20c4ec5c4ef7','Human male and female pelvis'],chest:['9b24894e318d4f37b7a10692d77b8343','Ribcage and pelvis'],abdomen:['bfe2c671298947f8bcf0f69c06e74ed8','Adult digestive system']};
+const AUTO={};Object.keys(MD).forEach(k=>{if(REG[k]&&k!=='all')AUTO[k]=k});
+let is3d=true,cur='',custom=null;let flipped=false;
+function autoView(){if($('mSel').value!=='auto'||custom)return;const app=document.querySelector('.app');
+  if(sel==='all'&&is3d){is3d=false;flipped=true}else if(sel!=='all'&&flipped&&!is3d){is3d=true;flipped=false}else return;
+  $('b3d').setAttribute('aria-pressed',is3d);app.classList.toggle('is3d',is3d)}
+function show3(){if(!is3d)return;const v=$('mSel').value,m=custom||(v==='auto'?MD[AUTO[sel]]:MD[v]);
+  if(!m){$('mT').textContent='Pick a body part to see its 3D model.';return}
+  if(m[0]!==cur){cur=m[0];$('v3').src='https://sketchfab.com/models/'+m[0]+'/embed?autostart=1&ui_theme=dark'}
+  $('mT').innerHTML='Showing <a href="https://sketchfab.com/models/'+m[0]+'" target="_blank" rel="noopener noreferrer">'+esc(m[1])+'</a> from Sketchfab. All built-in models are CC Attribution, so credit the author if you reuse them. Models you paste in yourself are your responsibility.'}
+$('b3d').onclick=e=>{flipped=false;is3d=!is3d;e.currentTarget.setAttribute('aria-pressed',is3d);document.querySelector('.app').classList.toggle('is3d',is3d);show3()};
+$('mSel').onchange=()=>{custom=null;show3()};
+$('mB').onclick=()=>{const m=$('mU').value.match(/[0-9a-f]{32}/i);if(!m){$('mT').textContent='That link has no Sketchfab model ID. Copy the model page address from your browser.';return}custom=[m[0].toLowerCase(),'Your model'];show3()};
+select('brain');setT(0);
+})();
+</script>
+</body>
+</html>
