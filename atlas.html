@@ -29,10 +29,10 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 .stage{grid-area:stage;position:relative;min-height:0;background:linear-gradient(180deg,#ffffff 0%,#fbfcfe 70%,#f4f6f9 100%);border-right:1px solid var(--line)}
 #gl{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none}
 .hud{position:absolute;z-index:2;left:20px;right:20px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.top{top:16px}.bot{bottom:14px;color:var(--muted);font-size:12px;pointer-events:none}
-.hud button{background:var(--glass);backdrop-filter:blur(8px);color:var(--ink);border-color:var(--line);font-size:13px;padding:8px 14px}.hud button[aria-pressed="true"]{background:#102334;color:#fff;border-color:#102334}
+.top{top:16px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:6px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}.bot{bottom:14px;color:var(--muted);font-size:12px;pointer-events:none}
+.hud button{background:var(--glass);backdrop-filter:blur(8px);color:var(--ink);border-color:var(--line);font-size:13px;padding:8px 14px;flex:0 0 auto}.hud button[aria-pressed="true"]{background:#102334;color:#fff;border-color:#102334}
 .hud button i{font-style:normal;opacity:.6;margin-left:6px;font-weight:500}
-.hudLab{align-self:center;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:#102334;border-radius:999px;padding:5px 12px;white-space:nowrap}
+.hudLab{align-self:center;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#fff;background:#102334;border-radius:999px;padding:6px 12px;white-space:nowrap;flex:0 0 auto;position:sticky;left:0;z-index:1;box-shadow:2px 0 6px rgba(16,35,52,.25)}
 #hov{position:absolute;z-index:2;pointer-events:none;background:#102334;border:1px solid #102334;border-radius:8px;padding:4px 10px;font-weight:600;font-size:12px;display:none;color:#fff;box-shadow:var(--shadow)}
 .side{grid-area:side;overflow:auto;border-left:1px solid var(--line);background:var(--bg);padding:22px;display:flex;flex-direction:column;gap:16px}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
