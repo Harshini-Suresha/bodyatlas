@@ -116,7 +116,7 @@ summary:hover{color:var(--a-dark)}.hh{margin:6px 0 0;font-size:12px;letter-spaci
 <li><b>Pick a body part</b> — brain, heart, liver, whatever you study.</li>
 <li><b>Get the datasets</b> — source links, analysis guides, and a built-in checker that runs in your browser.</li>
 </ol>
-<button class="introBtn" id="introNext">Start exploring →</button><button class="introSkip" id="introSkip" title="Close this time only — the intro will show again on your next visit">remind me next visit</button>
+<button class="introBtn" id="introNext">Start exploring →</button>
 </div></div>
 <div class="app is3d">
  <header class="bar"><div class="logo"><span class="orb"></span>BodyTrack Atlas</div><span class="sub">A free index of open imaging datasets, by organism and body part</span><div class="sp"></div><button id="bAbout">About</button><button id="b3d" aria-pressed="true">3D model</button><button id="bPin" aria-pressed="true">Hotspots</button><button id="bTint" aria-pressed="true">Skin</button><button id="bMus" aria-pressed="false">Muscles</button><button id="bBone" aria-pressed="false">Skeleton</button><button id="bOrg" aria-pressed="true">Organs</button><button id="bBack" aria-pressed="false">Back view</button></header>
@@ -888,7 +888,6 @@ $('mB').onclick=()=>{const m=$('mU').value.match(/[0-9a-f]{32}/i);if(!m){$('mT')
  buildMdl();showViewers();renderOrgBtns();select(sel&&REG[sel]?sel:'brain');setT(0);
  try{if(localStorage.getItem('bodytrack_seen'))$('introWrap').classList.remove('open')}catch(e){}
  $('introNext').onclick=()=>{try{localStorage.setItem('bodytrack_seen','1')}catch(e){}$('introWrap').classList.remove('open')};
- $('introSkip').onclick=()=>$('introWrap').classList.remove('open');
  $('bAbout').onclick=()=>$('introWrap').classList.add('open');
 })();
 </script>
