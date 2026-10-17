@@ -137,7 +137,7 @@ summary:hover{color:var(--a-dark)}.hh{margin:6px 0 0;font-size:12px;letter-spaci
   <div class="card"><h3>Tracked hotspots here</h3><div id="hs" style="display:flex;flex-direction:column;gap:8px"></div></div>
   <div class="card"><h3>Alerts for this scan</h3><div id="al"></div></div>
    <h3 class="hh">Datasets for this body part</h3>
-   <div class="card" id="db"><h3>Step 3 · Datasets — analyse in place</h3><div id="stats"><div class="empty">Loading collection stats…</div></div><div class="btnRow" style="margin-top:10px"><button class="btnSm" id="expCsv">Export CSV</button><button class="btnSm" id="expJson">Export JSON</button></div><p class="note" style="margin:8px 0 0">Every entry below has a verified source link plus an <b>Analyse</b> panel: mirrors, viewer handoff, suggested pipeline, citation, and a built-in image/CSV analyser that runs fully in your browser.</p></div>
+   <div class="card" id="db"><h3>Step 3 · Datasets — analyse in place</h3><div id="stats"><div class="empty">Loading collection stats…</div></div><div class="btnRow" style="margin-top:10px"><button class="btnSm" id="expCsv">Export CSV</button><button class="btnSm" id="expJson">Export JSON</button><button class="btnSm" id="shareBtn">Copy view link</button><button class="btnSm" id="favBtn" aria-pressed="false">☆ Saved (<span id="favN">0</span>)</button></div><div class="btnRow" style="margin-top:8px;align-items:center"><select id="sortSel" aria-label="Sort datasets" style="width:auto;flex:1;min-width:150px"><option value="rel">Sort: relevance</option><option value="az">Sort: name A–Z</option><option value="fmt">Sort: format</option></select><label class="note" style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" id="freeOnly" style="width:auto;accent-color:var(--a)"> Free access only</label></div><p class="note" style="margin:8px 0 0">Every entry below has a verified source link plus an <b>Analyse</b> panel: mirrors, viewer handoff, suggested pipeline, citation, and a built-in image/CSV analyser that runs fully in your browser.</p></div>
    <input type="search" id="q" placeholder="Filter by name, modality or condition" aria-label="Filter datasets">
   <div id="dl" style="display:flex;flex-direction:column;gap:10px" aria-live="polite"></div>
   <details class="card"><summary>Add your own dataset</summary>
@@ -715,6 +715,12 @@ D.push(X('Preclinical mouse whole-body CT/MRI','https://doi.org/10.5281/ZENODO.1
  X('Xenbase knowledgebase','https://www.xenbase.org/','Genomics, expression, images','Genotype to phenotype','Mixed','Free access',['embryo'],'Central Xenopus resource: genomes, gene expression, phenotypes and developmental images.',['xenopus']));
 let U=[];try{U=JSON.parse(localStorage.getItem('ntatlas')||'[]')}catch(e){}
 let sel='brain',hover=null,spin=true,curOrg='human';
+let FAV=[];try{FAV=JSON.parse(localStorage.getItem('bodytrack_fav')||'[]')}catch(e){}
+let favOnly=false;
+const favKey=d=>d.n+'|'+(d.u||'');
+function isFav(d){return FAV.includes(favKey(d))}
+function toggleFav(d){const k=favKey(d);FAV=FAV.includes(k)?FAV.filter(x=>x!==k):FAV.concat(k);try{localStorage.setItem('bodytrack_fav',JSON.stringify(FAV))}catch(e){}const n=$('favN');if(n)n.textContent=FAV.length}
+function shareState(){try{history.replaceState(null,'','#o='+curOrg+'&r='+sel+'&q='+encodeURIComponent($('q').value))}catch(e){}}
 
 const CASE={months:[0,3,6,9,12,15],
  lesions:[{id:'A',name:'Lung nodule',r:'lungs',pos:[-.3,.8,.22],color:'#ff5d73',v:[2.1,3.4,4.8,3,1.9,1.4]},
@@ -743,7 +749,12 @@ function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','
 function list(){
   const q=$('q').value.toLowerCase().trim(),r=REG[sel],org=ORGANISMS[curOrg];
   $('rn').innerHTML=(r.c?'<span class="sw" style="background:#'+r.c.toString(16).padStart(6,'0')+'"></span>':'')+org.n+' · '+r.n;$('rd').textContent=r.d+' Species context: '+org.sci+' — '+org.d;
-  const pool=all(),ds=pool.filter(d=>has(d,sel)&&(!q||[d.n,d.mod,d.c,d.t].join(' ').toLowerCase().includes(q))).sort((a,b)=>(a.r.includes('all')?1:0)-(b.r.includes('all')?1:0));
+  const pool=all();
+  let ds=pool.filter(d=>has(d,sel)&&(!q||[d.n,d.mod,d.c,d.t].join(' ').toLowerCase().includes(q)));
+  if(favOnly)ds=ds.filter(d=>isFav(d));
+  if($('freeOnly')&&$('freeOnly').checked)ds=ds.filter(d=>/free download|free access/i.test(d.a||''));
+  const so=$('sortSel')?$('sortSel').value:'rel';
+  ds=ds.sort(so==='az'?(a,b)=>a.n.localeCompare(b.n):so==='fmt'?(a,b)=>String(a.f||'').localeCompare(String(b.f||'')):(a,b)=>(a.r.includes('all')?1:0)-(b.r.includes('all')?1:0));
   window._view=ds;
   $('dl').innerHTML=ds.length?ds.map(d=>{const gi=pool.indexOf(d);
     const fmt=(d.f||'').toLowerCase(),isDicom=/dicom/.test(fmt),isNifti=/nifti|bids/.test(fmt),isImg=/png|jpeg|jpg|tiff/.test(fmt);
@@ -751,11 +762,13 @@ function list(){
     if(isDicom)tools+='<span><a style="margin:0" href="https://viewer.ohif.org/" target="_blank" rel="noopener noreferrer">Open in OHIF Viewer</a></span>';
     if(isNifti)tools+='<span><a style="margin:0" href="https://volview.kitware.com/" target="_blank" rel="noopener noreferrer">Open in VolView</a></span>';
     if(isImg)tools+='<span>Image-ready: use Analyse tab below</span>';
-    return '<div class="ds"><b>'+esc(d.n)+'</b>'+(d.u&&/^https?:\/\//.test(d.u)?'<a href="'+esc(d.u)+'" target="_blank" rel="noopener noreferrer">Source</a>':'')+'<p>'+esc(d.t||'')+'</p><div class="tg"><span>'+esc(d.mod||'')+'</span>'+(d.c?'<span>'+esc(d.c)+'</span>':'')+(d.f?'<span>'+esc(d.f)+'</span>':'')+(d.a?'<span>'+esc(d.a)+'</span>':'')+(d.r.includes('all')&&sel!=='all'?'<span>Whole-body set</span>':'')+(d.mine?'<span class="me">Added by you</span>':'')+'</div><div class="btnRow" style="margin-top:9px"><button class="btnSm btnPrimary" data-wb="'+gi+'">Analyse in site</button>'+(d.u?'<button class="btnSm" data-copy="'+esc(d.u)+'">Copy link</button>':'')+'</div>'+(tools?'<div class="tg">'+tools+'</div>':'')+'</div>'}).join(''):'<div class="empty">No datasets listed for this region yet. Add one below.</div>';
+    return '<div class="ds"><b>'+esc(d.n)+'</b>'+(d.u&&/^https?:\/\//.test(d.u)?'<a href="'+esc(d.u)+'" target="_blank" rel="noopener noreferrer">Source</a>':'')+'<p>'+esc(d.t||'')+'</p><div class="tg"><span>'+esc(d.mod||'')+'</span>'+(d.c?'<span>'+esc(d.c)+'</span>':'')+(d.f?'<span>'+esc(d.f)+'</span>':'')+(d.a?'<span>'+esc(d.a)+'</span>':'')+(d.r.includes('all')&&sel!=='all'?'<span>Whole-body set</span>':'')+(d.mine?'<span class="me">Added by you</span>':'')+'</div><div class="btnRow" style="margin-top:9px"><button class="btnSm btnPrimary" data-wb="'+gi+'">Analyse in site</button>'+(d.u?'<button class="btnSm" data-copy="'+esc(d.u)+'">Copy link</button>':'')+'<button class="btnSm" data-fv="'+gi+'">'+(isFav(d)?'★ Saved':'☆ Save')+'</button>'+'</div>'+(tools?'<div class="tg">'+tools+'</div>':'')+'</div>'}).join(''):'<div class="empty">No datasets listed for this region yet. Add one below.</div>';
   const qq=(QK[sel]||'medical imaging')+' '+ORGANISMS[curOrg].n;$('dl').innerHTML+='<div class="ds"><b>Search everywhere for '+esc(ORGANISMS[curOrg].n+' '+REG[sel].n)+'</b><p>No list covers every dataset. These open live searches for '+esc(qq)+'.</p><div class="tg">'+[['Google Dataset Search','https://datasetsearch.research.google.com/search?query=',1],['Kaggle','https://www.kaggle.com/search?q=',1],['Zenodo','https://zenodo.org/search?q=',1],['Hugging Face','https://huggingface.co/datasets?search=',1],['Grand Challenge','https://grand-challenge.org/challenges/'],['TCIA collections','https://www.cancerimagingarchive.net/browse-collections/'],['PhysioNet','https://physionet.org/about/database/']].map(l=>'<span><a style="margin:0" href="'+l[1]+(l[2]?encodeURIComponent(qq):'')+'" target="_blank" rel="noopener noreferrer">'+l[0]+'</a></span>').join('')+'</div></div>';
   renderStats();
   [...document.querySelectorAll('[data-wb]')].forEach(b=>b.onclick=()=>openWb(+b.dataset.wb));
-  [...document.querySelectorAll('[data-copy]')].forEach(b=>b.onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(b.dataset.copy);b.textContent='Copied';setTimeout(()=>b.textContent='Copy link',1200)})}
+  [...document.querySelectorAll('[data-copy]')].forEach(b=>b.onclick=()=>{navigator.clipboard&&navigator.clipboard.writeText(b.dataset.copy);b.textContent='Copied';setTimeout(()=>b.textContent='Copy link',1200)});
+  [...document.querySelectorAll('[data-fv]')].forEach(b=>b.onclick=()=>{toggleFav(all()[+b.dataset.fv]);list();renderOrgBtns()});
+  shareState()}
 function renderStats(){
   const pool=all().filter(d=>(d.o||['human']).includes(curOrg)),n=pool.length;
   const free=pool.filter(d=>/free download|free access/i.test(d.a||'')).length;
@@ -763,7 +776,8 @@ function renderStats(){
   const cred=pool.filter(d=>/credential|application|licence|kaggle/i.test(d.a||'')).length;
   const shown=(window._view||[]).length;
   const org=ORGANISMS[curOrg];
-  $('stats').innerHTML='<div class="note" style="margin-bottom:6px"><b>'+esc(org.n)+'</b> <span style="opacity:.75">'+esc(org.sci)+'</span> · '+esc(org.d)+'</div><div class="statGrid"><div class="s"><b>'+n+'</b><span>'+esc(org.n)+' indexed</span></div><div class="s"><b>'+shown+'</b><span>In this view</span></div><div class="s"><b>'+free+'</b><span>Free access</span></div><div class="s"><b>'+(reg+cred)+'</b><span>Reg / access</span></div></div>'}
+  $('stats').innerHTML='<div class="note" style="margin-bottom:6px"><b>'+esc(org.n)+'</b> <span style="opacity:.75">'+esc(org.sci)+'</span> · '+esc(org.d)+'</div><div class="statGrid"><div class="s"><b>'+n+'</b><span>'+esc(org.n)+' indexed</span></div><div class="s"><b>'+shown+'</b><span>In this view</span></div><div class="s"><b>'+free+'</b><span>Free access</span></div><div class="s"><b>'+(reg+cred)+'</b><span>Reg / access</span></div></div>'+modChart()}
+function modChart(){const rows=(window._view||[]),m={};rows.forEach(d=>{const k=String(d.mod||'Other').split(',')[0].trim().slice(0,22)||'Other';m[k]=(m[k]||0)+1});const top=Object.entries(m).sort((a,b)=>b[1]-a[1]).slice(0,5);if(!top.length||!top[0][1])return '';const mx=top[0][1];return '<div style="margin-top:10px;font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)">Top modalities in view</div>'+top.map(x=>'<div style="display:flex;gap:8px;align-items:center;margin-top:5px;font-size:12px"><span style="min-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(x[0])+'</span><span style="flex:1;height:8px;background:var(--line-soft);border-radius:99px;overflow:hidden"><span style="display:block;height:100%;width:'+Math.round(x[1]/mx*100)+'%;background:var(--a);border-radius:99px"></span></span><b style="min-width:28px;text-align:right;font-variant-numeric:tabular-nums">'+x[1]+'</b></div>').join('')}
 function mirrors(d){
   const q=encodeURIComponent(d.n+' '+(ORGANISMS[curOrg]?ORGANISMS[curOrg].n:''));
   return [['Source page',d.u],['Kaggle search','https://www.kaggle.com/search?q='+q],['Zenodo search','https://zenodo.org/search?q='+q],['Hugging Face','https://huggingface.co/datasets?search='+q],['Google Dataset Search','https://datasetsearch.research.google.com/search?query='+q],['Grand Challenge','https://grand-challenge.org/challenges/']].filter(x=>x[1]).map(x=>'<span><a style="margin:0" href="'+esc(x[1])+'" target="_blank" rel="noopener noreferrer">'+esc(x[0])+'</a></span>').join('')}
@@ -802,6 +816,10 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape')$('wbWrap').classLis
 function dlFile(name,text){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type:'text/plain'}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)}
 $('expCsv').onclick=()=>{const rows=window._view||[];const q=s=>'"'+String(s??'').replace(/"/g,'""')+'"';dlFile('bodytrack-'+curOrg+'-datasets.csv','name,species,url,modality,condition,format,access,regions,notes\n'+rows.map(d=>[d.n,(d.o||['human']).join('|'),d.u,d.mod,d.c,d.f,d.a,d.r.join('|'),d.t].map(q).join(',')).join('\n'))};
 $('expJson').onclick=()=>dlFile('bodytrack-'+curOrg+'-datasets.json',JSON.stringify({organism:curOrg,datasets:window._view||[]},null,2));
+$('favN').textContent=FAV.length;
+$('favBtn').onclick=e=>{favOnly=!favOnly;e.currentTarget.setAttribute('aria-pressed',favOnly);e.currentTarget.innerHTML=(favOnly?'★ Showing saved':'☆ Saved')+' (<span id="favN">'+FAV.length+'</span>)';list()};
+$('sortSel').onchange=list;$('freeOnly').onchange=list;
+$('shareBtn').onclick=()=>{shareState();const u=location.href;if(navigator.clipboard)navigator.clipboard.writeText(u);$('shareBtn').textContent='Link copied';setTimeout(()=>$('shareBtn').textContent='Copy view link',1500)};
 Object.keys(REG).forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=k==='all'?'All regions':REG[k].n;$('aR').appendChild(o)});
 $('aB').onclick=()=>{const n=$('aN').value.trim();if(!n){$('aS').textContent='Enter a dataset name.';return}
   const r=$('aR').value;U.push({n,mod:$('aM').value.trim(),u:$('aU').value.trim(),t:$('aT').value.trim(),r:[r],o:[curOrg],mine:true});
@@ -865,7 +883,8 @@ function showViewers(){const el=$('orgView');if(!el)return;const vs=ORGVIEW[curO
 $('b3d').onclick=e=>{flipped=false;is3d=!is3d;e.currentTarget.setAttribute('aria-pressed',is3d);document.querySelector('.app').classList.toggle('is3d',is3d);show3()};
 $('mSel').onchange=()=>{custom=null;show3()};
 $('mB').onclick=()=>{const m=$('mU').value.match(/[0-9a-f]{32}/i);if(!m){$('mT').textContent='That link has no Sketchfab model ID. Copy the model page address from your browser.';return}custom=[m[0].toLowerCase(),'Your model'];show3()};
- buildMdl();showViewers();renderOrgBtns();select('brain');setT(0);
+ (function(){try{const h=location.hash.match(/o=([a-z]+)/),r=location.hash.match(/[?&]r=([a-z]+)/),qm=location.hash.match(/[?&]q=([^&]*)/);if(h&&ORGANISMS[h[1]]){curOrg=h[1];document.querySelector('.app').classList.toggle('nohuman',curOrg!=='human')}if(r&&(REG[r[1]]||r[1]==='all'))sel=r[1];if(qm)$('q').value=decodeURIComponent(qm[1])}catch(e){}})();
+ buildMdl();showViewers();renderOrgBtns();select(sel&&REG[sel]?sel:'brain');setT(0);
  try{if(localStorage.getItem('bodytrack_seen'))$('introWrap').classList.remove('open')}catch(e){}
  $('introNext').onclick=()=>{try{localStorage.setItem('bodytrack_seen','1')}catch(e){}$('introWrap').classList.remove('open')};
  $('introSkip').onclick=()=>$('introWrap').classList.remove('open');
