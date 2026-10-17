@@ -886,8 +886,8 @@ $('mSel').onchange=()=>{custom=null;show3()};
 $('mB').onclick=()=>{const m=$('mU').value.match(/[0-9a-f]{32}/i);if(!m){$('mT').textContent='That link has no Sketchfab model ID. Copy the model page address from your browser.';return}custom=[m[0].toLowerCase(),'Your model'];show3()};
  (function(){try{const h=location.hash.match(/o=([a-z]+)/),r=location.hash.match(/[?&]r=([a-z]+)/),qm=location.hash.match(/[?&]q=([^&]*)/);if(h&&ORGANISMS[h[1]]){curOrg=h[1];document.querySelector('.app').classList.toggle('nohuman',curOrg!=='human')}if(r&&(REG[r[1]]||r[1]==='all'))sel=r[1];if(qm)$('q').value=decodeURIComponent(qm[1])}catch(e){}})();
  buildMdl();showViewers();renderOrgBtns();select(sel&&REG[sel]?sel:'brain');setT(0);
- try{if(localStorage.getItem('bodytrack_seen'))$('introWrap').classList.remove('open')}catch(e){}
- $('introNext').onclick=()=>{try{localStorage.setItem('bodytrack_seen','1')}catch(e){}$('introWrap').classList.remove('open')};
+ $('introWrap').classList.add('open');
+ $('introNext').onclick=()=>$('introWrap').classList.remove('open');
  $('bAbout').onclick=()=>$('introWrap').classList.add('open');
 })();
 </script>
