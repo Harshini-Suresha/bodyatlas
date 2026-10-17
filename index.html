@@ -158,9 +158,10 @@ const REG={
   legs:{n:'Legs and feet',c:0x9fe0b0,d:'Thighs to toes. Common targets: knee osteoarthritis, ligament tears, stress fractures.'},
   embryo:{n:'Embryo and development',c:0xa8d8b9,d:'Developmental stages and whole-embryo imaging. Common targets: morphogenesis, phenotyping, gene expression.'},
   eye:{n:'Eye',c:0x7dd3fc,d:'Vision. Common targets: glaucoma, diabetic retinopathy, cataract, vessel segmentation.'},
-  breast:{n:'Breast',c:0xf9a8d4,d:'Mammography, ultrasound and MRI. Common targets: masses, calcifications, density.'}};
+  breast:{n:'Breast',c:0xf9a8d4,d:'Mammography, ultrasound and MRI. Common targets: masses, calcifications, density.'},
+  skin:{n:'Skin',c:0xfbbf24,d:'Surface imaging. Common targets: melanoma, lesions, rashes, segmentation.'}};
 const ORGANISMS={
- human:{n:'Human',sci:'Homo sapiens',regions:['brain','head','chest','lungs','heart','abdomen','liver','stomach','kidneys','intestines','spine','pelvis','arms','legs','joints','eye','breast'],d:'Clinical and population imaging. Full body figure, 3D models and longitudinal tracking demo.'},
+ human:{n:'Human',sci:'Homo sapiens',regions:['brain','head','chest','lungs','heart','abdomen','liver','stomach','kidneys','intestines','spine','pelvis','arms','legs','joints','eye','breast','skin'],d:'Clinical and population imaging. Full body figure, 3D models and longitudinal tracking demo.'},
  mouse:{n:'Mouse',sci:'Mus musculus',regions:['brain','heart','lungs','liver','kidneys','intestines','stomach','spine','embryo','joints'],d:'Premier mammalian model. Whole-body CT/MRI with multi-organ labels plus Allen atlases and phenotyping.'},
  rat:{n:'Rat',sci:'Rattus norvegicus',regions:['brain','heart'],d:'Physiology and neuroscience model. Waxholm Space reference atlases plus cardiac DT-MRI.'},
  macaque:{n:'Macaque',sci:'Macaca mulatta',regions:['brain','heart','lungs'],d:'Translational primate model. PRIME-DE connectome resource and D99/NMT templates.'},
@@ -168,6 +169,8 @@ const ORGANISMS={
  fly:{n:'Fruit fly',sci:'Drosophila melanogaster',regions:['brain','heart','intestines','embryo'],d:'Circuit neuroscience workhorse. FlyLight lines and Virtual Fly Brain connectomics.'},
  worm:{n:'C. elegans',sci:'Caenorhabditis elegans',regions:['brain','intestines','embryo'],d:'302-neuron model with fully mapped lineage. WormAtlas anatomy and OpenWorm simulations.'},
  pig:{n:'Pig',sci:'Sus scrofa domestica',regions:['brain','heart'],d:'Translational model for neurodevelopment and cardiology. Free UIUC MRI brain atlases plus porcine cardiac CT/MRI.'},
+ rabbit:{n:'Rabbit',sci:'Oryctolagus cuniculus',regions:['brain'],d:'Bridge species for neuroscience with human-like white matter. RBT 1.0 multimodal stereotaxic atlas.'},
+ xenopus:{n:'Xenopus',sci:'Xenopus laevis / tropicalis',regions:['embryo','brain','heart','kidneys'],d:'Aquatic frog model for embryology and organogenesis. Xenbase anatomy hub with organ atlases and developmental movies.'},
  marmoset:{n:'Marmoset',sci:'Callithrix jacchus',regions:['brain'],d:'Small New World primate bridging rodent and human neuroscience. Brain/MINDS reference atlases, connectivity and ECoG.'}};
 const ALL=['all'],X=(n,u,mod,c,f,a,r,t,o)=>({n,u,mod,c,f,a,r,t,o:o||['human']});
 // Edit this list to add datasets. r = body parts it applies to ('all' = every part).
@@ -239,7 +242,7 @@ D.push(X('CQ500 head CT','https://www.kaggle.com/datasets/crawford/qureai-headct
  X('MedMNIST','https://medmnist.com/','Many types','Many conditions','NumPy','Free download',ALL,'Small standardised sets for quick tests.'),
  X('RadImageNet','https://www.radimagenet.com/','CT, MRI, ultrasound','Many conditions','JPEG','Registration',ALL,'Large labelled radiology images.'),
  X('Visible Human Project','https://www.nlm.nih.gov/research/visible/visible_human.html','CT, MRI, photographs','Normal anatomy','Raw','Licence required',ALL,'Full-body anatomy slices from two donors.'),
- X('ISIC Archive','https://www.isic-archive.com/','Skin photographs','Skin cancer','JPEG','Free download',ALL,'Skin lesion images from the whole body.'));
+ X('ISIC Archive','https://www.isic-archive.com/','Skin photographs','Skin cancer','JPEG','Free download',['skin'],'Skin lesion images from the whole body.'));
 D.push(X('Soft-tissue sarcoma','https://www.cancerimagingarchive.net/collection/soft-tissue-sarcoma/','MRI, PET/CT','Sarcoma of the limbs and trunk','DICOM','Free download',['arms', 'legs', 'pelvis'],'Imaging of soft-tissue sarcomas with segmentations.'),
  X('Osteosarcoma tumour assessment','https://www.cancerimagingarchive.net/collection/osteosarcoma-tumor-assessment/','Histology','Bone cancer (osteosarcoma)','Images','Free download',['arms', 'legs'],'Bone tumour images for assessing treatment response.'),
  X('OAI-ZIB knee segmentation','https://pubdata.zib.de/','MRI','Knee bone and cartilage','NIfTI','Free download',['legs', 'joints'],'Knee MRI from the Osteoarthritis Initiative with bone and cartilage outlines.'),
@@ -337,7 +340,7 @@ D.push( X('AAPM-RT-MAC','https://www.cancerimagingarchive.net/collection/aapm-rt
  X('DRIVE','https://drive.grand-challenge.org/','Retinal Image','Segmentation','TIFF','See source',['eye'],'Fundus blood vessels · 20 for training, 20 for test · Segmentation'),
  X('DRiDB','https://ipg.fer.hr/ipg/resources/image_database','Fundus','Classification','bmp','See source',['brain','eye'],'Eye · 648 · Classification'),
  X('Dental X Ray Computacional Vision Segmentation','https://www.kaggle.com/datasets/henriquerezermosqur/dental-x-ray-computacional-vision-segmentation/data','X-Ray','Segmentation','JPEG','See source',['head'],'· 8188 · Segmentation'),
- X('Derm7pt','https://derm.cs.sfu.ca/Welcome.html','Dermatoscope','Classification','JPEG','See source',['all'],'Skin · 2000 · Classification'),
+ X('Derm7pt','https://derm.cs.sfu.ca/Welcome.html','Dermatoscope','Classification','JPEG','See source',['skin'],'Skin · 2000 · Classification'),
  X('Diabetic Retinopathy Arranged','https://tianchi.aliyun.com/dataset/93926','Fundus','Classification','JPEG','See source',['eye'],'Retina · 35127 · Classification'),
  X('DigestPath2019','https://digestpath2019.grand-challenge.org/Home/','Pathology Image','Segmentation/Detection/Classification','PNG','See source',['intestines','stomach'],'Cell · 250 · Segmentation/Detection/Classification'),
  X('Digital Knee X-ray Images','https://data.mendeley.com/datasets/t9ndx37v5h/1','X-Ray','Classification','PNG','See source',['joints'],'Knee · 1650 · Classification'),
@@ -381,7 +384,7 @@ D.push( X('AAPM-RT-MAC','https://www.cancerimagingarchive.net/collection/aapm-rt
  X('IDRID','https://idrid.grand-challenge.org/Home/','Retinal Image','Segmentation','JPEG','See source',['eye'],'Lesion · 81 · Segmentation'),
  X('INSTANCE 2022','https://instance.grand-challenge.org/','CT','Segmentation','NIfTI','See source',['brain','head'],'Cerebral hemorrhage · 100 for training, 30 for validation, 70 for test. · Segmentation'),
  X('INSTED','https://www.codabench.org/competitions/2139/#/pages-tab','MR','Segmentation','NIfTI','See source',['brain','head'],'Brain · 191 · Segmentation'),
- X('ISIC-2024','https://www.kaggle.com/competitions/isic-2024-challenge','dermoscopic','Classification','JPEG','See source',['all'],'Skin · 81722 · Classification'),
+ X('ISIC-2024','https://www.kaggle.com/competitions/isic-2024-challenge','dermoscopic','Classification','JPEG','See source',['skin'],'Skin · 81722 · Classification'),
  X('ISLES22','https://isles22.grand-challenge.org/','MR','Segmentation','NIfTI','See source',['brain','head'],'Stroke lesions · 250 for training, 150 for test · Segmentation'),
  X('ISPY1-Tumor-SEG-Radiomics','https://www.cancerimagingarchive.net/analysis-result/ispy1-tumor-seg-radiomics/','MRI','Segmentation','NIfTI','See source',['arms','breast','lungs'],'Breast tumors · 483 · Segmentation'),
  X('IU-Xray','https://paperswithcode.com/dataset/iu-x-ray','','Imaging','Mixed','See source',['lungs'],'· Imaging'),
@@ -499,7 +502,7 @@ D.push( X('AAPM-RT-MAC','https://www.cancerimagingarchive.net/collection/aapm-rt
  X('SARAS-ESAD','https://saras-esad.grand-challenge.org','Endoscopy','Action Recognition','JPEG','See source',['stomach'],'Abdominal Cavity · 33398 · Action Recognition'),
  X('SARS-COV-2 Ct-Scan','https://www.kaggle.com/datasets/plameneduardo/sarscov2-ctscan-dataset','CT','Classification','PNG','See source',['lungs'],'Lung · 2482 · Classification'),
  X('SCARED','https://endovissub2019-scared.grand-challenge.org/Home/','Endoscopy','Depth Estimation','PNG','See source',['stomach'],'· 280G · Depth Estimation'),
- X('SCIN Skin Condition Dataset','https://research.google/blog/scin-a-new-resource-for-representative-dermatology-images/','Dermatology Image','Classification/VQA','PNG','See source',['all'],'Skin · 10408 · Classification/VQA'),
+ X('SCIN Skin Condition Dataset','https://research.google/blog/scin-a-new-resource-for-representative-dermatology-images/','Dermatology Image','Classification/VQA','PNG','See source',['skin'],'Skin · 10408 · Classification/VQA'),
  X('SEED-IV','https://bcmi.sjtu.edu.cn/home/seed/seed.html','','Imaging','Mixed','See source',['brain'],'· Imaging'),
  X('SEED','https://bcmi.sjtu.edu.cn/home/seed/seed.html','','Imaging','Mixed','See source',['brain','eye'],'· Imaging'),
  X('SEG.A.','https://multicenteraorta.grand-challenge.org/','CTA','Segmentation','.nrrd','See source',['all'],'Vascular tree · 56 · Segmentation'),
@@ -523,7 +526,7 @@ D.push( X('AAPM-RT-MAC','https://www.cancerimagingarchive.net/collection/aapm-rt
  X('SegTHOR','https://competitions.codalab.org/competitions/21145','CT','Segmentation','NIfTI','See source',['heart','lungs','stomach'],'Heart, Trachea, Aorta, Esophagus. · 40 for training, 20 for test. · Segmentation'),
  X('Shenzhen chest X-ray set','https://lhncbc.nlm.nih.gov/LHC-downloads/downloads.html#tuberculosis-image-data-sets','','Imaging','Mixed','See source',['legs','lungs'],'· Imaging'),
  X('Sinus Surgery Endoscopic Image Datasets','https://github.com/SURA23/Sinus-Surgery-Endoscopic-Image-Datasets?tab=readme-ov-file','Rhinoscopy','Segmentation','JPEG','See source',['head','stomach'],'nasal cavity · 9003 · Segmentation'),
- X('SkinCancer','https://heidata.uni-heidelberg.de/dataset.xhtml?persistentId=doi:10.11588/data/7QCR8S','Pathology','Classification','JPEG','See source',['all'],'Skin · 129,364 · Classification'),
+ X('SkinCancer','https://heidata.uni-heidelberg.de/dataset.xhtml?persistentId=doi:10.11588/data/7QCR8S','Pathology','Classification','JPEG','See source',['skin'],'Skin · 129,364 · Classification'),
  X('StructSeg2019 Task1','https://structseg2019.grand-challenge.org/','CT','Segmentation','NIfTI','See source',['head'],'Head and Neck · 50 · Segmentation'),
  X('StructSeg 2019 Task2','https://structseg2019.grand-challenge.org/','CT','Segmentation','NIfTI','See source',['head'],'Head and Neck · 50 · Segmentation'),
  X('StructSeg 2019 Task3','https://structseg2019.grand-challenge.org/','CT','Segmentation','NIfTI','See source',['lungs'],'Chest · 50 · Segmentation'),
@@ -568,7 +571,7 @@ D.push( X('TCIA 4D LUNG','https://www.cancerimagingarchive.net/collection/4d-lun
  X('TCIA acrin nsclc fdg pet','https://www.cancerimagingarchive.net/collection/acrin-nsclc-fdg-pet/','PET/CT','Cancer imaging','DICOM','Free download',['lungs'],'The Cancer Imaging Archive collection: acrin nsclc fdg pet.'),
  X('TCIA AHEP0731','https://www.cancerimagingarchive.net/collection/ahep0731/','Mixed imaging','Cancer imaging','DICOM','Free download',['liver'],'The Cancer Imaging Archive collection: ahep0731.'),
  X('TCIA anti pd 1 lung','https://www.cancerimagingarchive.net/collection/anti-pd-1_lung/','Mixed imaging','Cancer imaging','DICOM','Free download',['lungs'],'The Cancer Imaging Archive collection: anti pd 1 lung.'),
- X('TCIA anti pd 1 melanoma','https://www.cancerimagingarchive.net/collection/anti-pd-1_melanoma/','Mixed imaging','Cancer imaging','DICOM','Free download',['all'],'The Cancer Imaging Archive collection: anti pd 1 melanoma.'),
+ X('TCIA anti pd 1 melanoma','https://www.cancerimagingarchive.net/collection/anti-pd-1_melanoma/','Mixed imaging','Cancer imaging','DICOM','Free download',['skin'],'The Cancer Imaging Archive collection: anti pd 1 melanoma.'),
  X('TCIA AREN0532','https://www.cancerimagingarchive.net/collection/aren0532/','Mixed imaging','Cancer imaging','DICOM','Free download',['kidneys'],'The Cancer Imaging Archive collection: aren0532.'),
  X('TCIA AREN0533','https://www.cancerimagingarchive.net/collection/aren0533/','Mixed imaging','Cancer imaging','DICOM','Free download',['kidneys'],'The Cancer Imaging Archive collection: aren0533.'),
  X('TCIA AREN0534','https://www.cancerimagingarchive.net/collection/aren0534/','Mixed imaging','Cancer imaging','DICOM','Free download',['kidneys'],'The Cancer Imaging Archive collection: aren0534.'),
@@ -653,7 +656,7 @@ D.push( X('TCIA 4D LUNG','https://www.cancerimagingarchive.net/collection/4d-lun
  X('TCIA UPENN GBM','https://www.cancerimagingarchive.net/collection/upenn-gbm/','Mixed imaging','Cancer imaging','DICOM','Free download',['brain'],'The Cancer Imaging Archive collection: upenn gbm.'),
  X('TCIA UTSW GLIOMA','https://www.cancerimagingarchive.net/collection/utsw-glioma/','Mixed imaging','Cancer imaging','DICOM','Free download',['brain'],'The Cancer Imaging Archive collection: utsw glioma.'),
  X('TCIA yale brain mets longitudinal','https://www.cancerimagingarchive.net/collection/yale-brain-mets-longitudinal/','Mixed imaging','Cancer imaging','DICOM','Free download',['brain'],'The Cancer Imaging Archive collection: yale brain mets longitudinal.'));
-const QK={all:'medical imaging',eye:'eye fundus OCT',breast:'breast mammography',brain:'brain MRI',lungs:'lung CT',heart:'cardiac imaging',liver:'liver CT',stomach:'pancreas CT',kidneys:'kidney CT',intestines:'colon CT',spine:'spine CT',joints:'joint MRI',head:'head CT',chest:'chest X-ray',abdomen:'abdominal CT',pelvis:'pelvis CT',arms:'arm X-ray',legs:'leg knee X-ray'};
+const QK={all:'medical imaging',skin:'skin lesion image',eye:'eye fundus OCT',breast:'breast mammography',brain:'brain MRI',lungs:'lung CT',heart:'cardiac imaging',liver:'liver CT',stomach:'pancreas CT',kidneys:'kidney CT',intestines:'colon CT',spine:'spine CT',joints:'joint MRI',head:'head CT',chest:'chest X-ray',abdomen:'abdominal CT',pelvis:'pelvis CT',arms:'arm X-ray',legs:'leg knee X-ray'};
 const UP={head:['brain'],chest:['lungs','heart'],abdomen:['liver','stomach','kidneys','intestines']};
 D.forEach(d=>Object.keys(UP).forEach(k=>{if(d.r.some(x=>UP[k].includes(x)))d.r=d.r.concat(k)}));
 const add=(n,...ks)=>{const d=D.find(x=>x.n===n);if(d)d.r=d.r.concat(ks)};
@@ -686,7 +689,10 @@ D.push(X('Preclinical mouse whole-body CT/MRI','https://doi.org/10.5281/ZENODO.1
  X('Pig cardiac CT aligned dataset','https://plus.figshare.com/articles/dataset/A_spatially_and_temporally_aligned_contrast-non-contrast_cardiac_CT_dataset_of_pigs/30398977','CT','Cardiac segmentation','CT volumes','Free download',['heart'],'Contrast/non-contrast cardiac CT of pigs with nnU-Net configs (Sci Data 2026).',['pig']),
  X('4D zebrafish heart light-sheet (Zenodo)','https://doi.org/10.5281/zenodo.7953887','Light-sheet','Cardiac contractility','Volumes, code','Free download',['heart'],'Beating-heart volumes with 4D reconstruction and boundary-tracking code (CC-BY).',['zebrafish']),
  X('Zebrafish heart segmentation (NITRC)','https://www.nitrc.org/projects/zebrafishhearts','Light-sheet microscopy','Ventricle segmentation','Code + data','Free download',['heart'],'Automated ventricle segmentation for adult zebrafish light-sheet fluorescence data.',['zebrafish']),
- X('Zebrahub developmental atlas','https://zebrahub.sf.czbiohub.org/data','Light-sheet, scRNA','Embryo development','OME-Zarr','Free access',['embryo'],'Whole-embryo time-lapse with cell tracking in OME-Zarr plus napari plugin.',['zebrafish']));
+ X('Zebrahub developmental atlas','https://zebrahub.sf.czbiohub.org/data','Light-sheet, scRNA','Embryo development','OME-Zarr','Free access',['embryo'],'Whole-embryo time-lapse with cell tracking in OME-Zarr plus napari plugin.',['zebrafish']),
+ X('Rabbit brain atlas RBT 1.0','https://www.zoores.ac.cn/article/doi/10.24272/j.issn.2095-8137.2026.045','MRI, micro-CT','Stereotaxic reference, 107 regions','NIfTI','See source',['brain'],'Multimodal population-averaged template (5.0T in vivo, 9.4T ex vivo) with auto-segmentation pipeline.',['rabbit']),
+ X('Xenbase anatomy hub','https://www.xenbase.org/xenbase/static/anatomy/atlas.jsp','Drawings, movies, 3D','Organ atlases and development','Web atlas','Free access',['embryo','brain','heart','kidneys'],'Xenopus anatomy hub: organ atlases (heart, kidney), fate maps and developmental movies (NIH NICHD).',['xenopus']),
+ X('Xenbase knowledgebase','https://www.xenbase.org/','Genomics, expression, images','Genotype to phenotype','Mixed','Free access',['embryo'],'Central Xenopus resource: genomes, gene expression, phenotypes and developmental images.',['xenopus']));
 let U=[];try{U=JSON.parse(localStorage.getItem('ntatlas')||'[]')}catch(e){}
 let sel='brain',hover=null,spin=true,curOrg='human';
 
@@ -813,7 +819,7 @@ const MD={mus:['ab11ebff89224f03bd75efede1164cf6','Male Full Body Ecorche (muscl
 const AUTO={};Object.keys(MD).forEach(k=>{if(REG[k]&&k!=='all')AUTO[k]=k});
 const ORG3D={human:null,mouse:['musEmbBrain','musEmbOrg','musDev'],rat:['ratSkel'],macaque:[],zebrafish:['zfBone','zfWhole'],fly:['flyBrain','flyCT'],worm:[]};
 const ORGAUTO={mouse:{brain:'musEmbBrain',embryo:'musDev',heart:'musEmbOrg',lungs:'musEmbOrg',liver:'musEmbOrg',kidneys:'musEmbOrg',intestines:'musEmbOrg',joints:'musEmbBrain'},rat:{spine:'ratSkel',joints:'ratSkel'},zebrafish:{brain:'zfWhole',spine:'zfBone',embryo:'zfWhole',heart:'zfWhole'},fly:{brain:'flyBrain',embryo:'flyCT',heart:'flyCT',intestines:'flyCT'}};
-const ORGVIEW={mouse:[['Allen Brain 3D','https://mouse.brain-map.org/'],['eMouseAtlas','https://www.emouseatlas.org/']],rat:[['EBRAINS rat viewer','https://ebrains.eu/data-tools-services/brain-atlases/rat-brain']],macaque:[['PRIME-RE resources','https://prime-re.github.io/']],marmoset:[['Brain/MINDS 3D atlas viewer','https://dataportal.brainminds.jp/3d-atlas-viewer']],pig:[['UIUC pig neuroimaging resources','https://pigmri.illinois.edu/neuroimaging-resources']],zebrafish:[['mapZebrain','https://mapzebrain.org/'],['ZFIN','https://zfin.org/']],fly:[['Virtual Fly Brain','https://virtualflybrain.org/']],worm:[['WormAtlas','https://www.wormatlas.org/'],['OpenWorm','https://openworm.org/']]};
+const ORGVIEW={mouse:[['Allen Brain 3D','https://mouse.brain-map.org/'],['eMouseAtlas','https://www.emouseatlas.org/']],rat:[['EBRAINS rat viewer','https://ebrains.eu/data-tools-services/brain-atlases/rat-brain']],macaque:[['PRIME-RE resources','https://prime-re.github.io/']],marmoset:[['Brain/MINDS 3D atlas viewer','https://dataportal.brainminds.jp/3d-atlas-viewer']],pig:[['UIUC pig neuroimaging resources','https://pigmri.illinois.edu/neuroimaging-resources']],zebrafish:[['mapZebrain','https://mapzebrain.org/'],['ZFIN','https://zfin.org/']],fly:[['Virtual Fly Brain','https://virtualflybrain.org/']],worm:[['WormAtlas','https://www.wormatlas.org/'],['OpenWorm','https://openworm.org/']],rabbit:[['RBT 1.0 atlas paper','https://www.zoores.ac.cn/article/doi/10.24272/j.issn.2095-8137.2026.045']],xenopus:[['Xenbase anatomy hub','https://www.xenbase.org/xenbase/static/anatomy/atlas.jsp']]};
 const ORG3DFREE={human:[['NIH 3D Print Exchange','https://3d.nih.gov/','Thousands of free anatomy models with in-browser viewer + STL download']],
 marmoset:[['Marmoset brain STL, MRI-based (BrainFacts/SfN)','https://www.brainfacts.org/for-educators/for-the-classroom/2026/3d-printed-animal-brain-models-092826','Free STL + online viewer'],['3D atlas viewer (Brain/MINDS)','https://dataportal.brainminds.jp/3d-atlas-viewer','Interactive reference brain, Unity open-source']],
 pig:[['Pig brain STL, MRI-based (BrainFacts/SfN)','https://www.brainfacts.org/for-educators/for-the-classroom/2026/3d-printed-animal-brain-models-092826','Free STL + online viewer'],['NIH 3D Print Exchange','https://3d.nih.gov/','Search pig anatomy models']],
@@ -822,7 +828,9 @@ rat:[['Rat brain STL, MRI-based (BrainFacts/SfN)','https://www.brainfacts.org/fo
 macaque:[['Marmoset brain STL, MRI-based (BrainFacts/SfN)','https://www.brainfacts.org/for-educators/for-the-classroom/2026/3d-printed-animal-brain-models-092826','Primate proxy — closest free print model'],['NMT/D99 volumes → open in VolView','https://volview.kitware.com/','Load the free NIfTI templates for true macaque 3D'],['NIH 3D Print Exchange','https://3d.nih.gov/','Search primate models']],
 zebrafish:[['NIH 3D Print Exchange','https://3d.nih.gov/','Search zebrafish models']],
 fly:[['NIH 3D Print Exchange','https://3d.nih.gov/','Search Drosophila models']],
-worm:[['OpenWorm 3D browser','https://openworm.org/','Interactive whole-organism 3D — no download needed']]};
+worm:[['OpenWorm 3D browser','https://openworm.org/','Interactive whole-organism 3D — no download needed']],
+rabbit:[['Rabbit brain STL, MRI-based (BrainFacts/SfN)','https://www.brainfacts.org/for-educators/for-the-classroom/2026/3d-printed-animal-brain-models-092826','Free STL + online viewer'],['NIH 3D Print Exchange','https://3d.nih.gov/','Search rabbit models']],
+xenopus:[['NIH 3D Print Exchange','https://3d.nih.gov/','Search frog/Xenopus models']]};
 let is3d=true,cur='',custom=null;let flipped=false;
 function autoView(){if($('mSel').value!=='auto'||custom)return;const app=document.querySelector('.app');
   if(sel==='all'&&is3d){is3d=false;flipped=true}else if(sel!=='all'&&flipped&&!is3d){is3d=true;flipped=false}else return;
