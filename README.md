@@ -30,9 +30,14 @@ This repo is a static site (`index.html` only). Pages is enabled automatically o
 
 ## Structure
 
-- `index.html` — entire app (UI + CSS + JS + dataset list)
-- `atlas.html` — original file, same as `index.html`
+```
+index.html             markup + dataset list
+assets/css/styles.css  all styling
+assets/js/app.js       all behaviour (viewer, workbench, filters, 3D)
+```
+
+GitHub Pages serves from the repo root, so `index.html` stays at `/`.
 
 ## Add datasets
 
-Edit the `D.push(...)` list in `index.html`, or use “Add your own dataset” in the UI (saved to localStorage).
+Edit the `D.push(...)` list in `assets/js/app.js`, or use “Add your own dataset” in the UI (saved to localStorage).
